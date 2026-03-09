@@ -12,7 +12,7 @@ The current preview app is a minimal harness status page and does not present sp
 
 - [x] Milestone 1: Establish `specs/` as the catalog source and ship a first-pass marketplace UI in `harnesscli serve app` that lists spec folders.
 - [x] Milestone 2: Add a repository-aware install command generator and copy-to-clipboard download button per spec.
-- [ ] Milestone 3: Polish layout/content parity toward `skills.sh` style and finalize plan handoff.
+- [x] Milestone 3: Polish layout/content parity toward `skills.sh` style and finalize plan handoff.
 
 ## Current progress
 
@@ -21,6 +21,8 @@ The current preview app is a minimal harness status page and does not present sp
 - Added `/api/specs` response for structured spec listing from the same `specs/` source.
 - Added per-spec install command generation that binds to GitHub `origin` when available and falls back to placeholders when not.
 - Added copy-to-clipboard install button per spec card and committed `scripts/install-spec.sh` to install `specs/<slug>` into the current directory.
+- Polished the marketplace surface with a stronger hero, search/filter interaction, and refined card styling closer to `skills.sh`.
+- Refactored app rendering into `harness/src/util/marketplace.rs` with dedicated asset files for maintainability and lint compliance.
 
 ## Key decisions
 
@@ -29,7 +31,7 @@ The current preview app is a minimal harness status page and does not present sp
 
 ## Remaining issues / open questions
 
-- Need final visual tweaks and copy quality to better match `skills.sh`.
+- None.
 
 ## Links to related documents
 
