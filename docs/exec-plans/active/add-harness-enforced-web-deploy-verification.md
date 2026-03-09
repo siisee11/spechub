@@ -11,7 +11,7 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 ## Milestones
 
 - [x] Milestone 1: Audit existing harness and CI decision points to identify where web-change detection should live, then codify the deploy trigger contract (paths and rationale).
-- [ ] Milestone 2: Implement harness/project workflow logic that runs deploy commands only when web/deploy-surface changes are detected.
+- [x] Milestone 2: Implement harness/project workflow logic that runs deploy commands only when web/deploy-surface changes are detected.
 - [ ] Milestone 3: Implement deterministic post-deploy verification (for example: extract deployment URL/metadata and assert revision-target consistency plus reachability) and wire hard failure behavior.
 - [ ] Milestone 4: Add/extend automated tests to cover change detection, deploy/verify orchestration, and failure modes with repository-required coverage levels.
 - [ ] Milestone 5: Add minimal canonical documentation updates describing trigger conditions and verification contract; run relevant repository checks and record outcomes.
@@ -36,6 +36,12 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
   - `docs/design-docs/web-deploy-trigger-contract.md` (canonical rationale + integration location)
   - `harness/config/web-deploy-trigger-paths.txt` (machine-readable trigger glob set)
 - Updated `docs/design-docs/index.md` to include the new canonical design document.
+- Added `harnesscli web-deploy` command in `harness/src/cmd/web_deploy.rs` and wired it through the CLI command surface.
+- Implemented deploy-surface gating by loading `harness/config/web-deploy-trigger-paths.txt`, computing changed files, and skipping deploy when no trigger path matches.
+- Wired CI to run the harness deploy gate via `.github/workflows/harness.yml` after `make ci`:
+  - sets base/head SHAs for deterministic change detection
+  - runs `harness/target/release/harnesscli web-deploy`
+  - runs checked-in deploy command (`npm run web:cf:build-and-deploy`) only when gated changes are detected
 
 ## Key decisions
 
@@ -44,6 +50,7 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 - Keep web deploy gating path-based and explicit so non-web changes skip this path by design.
 - Use the existing CI chain (`harness.yml` -> `make ci`) as the canonical integration point for deploy gating and verification.
 - Centralize trigger path definitions in `harness/config/web-deploy-trigger-paths.txt` so implementation and docs consume one contract.
+- Keep deploy execution behind a dedicated harness CLI command (`harnesscli web-deploy`) so workflow logic remains thin and testable.
 
 ## Remaining issues / open questions
 

@@ -19,6 +19,7 @@ enum Command {
     Test,
     Lint,
     Typecheck,
+    WebDeploy,
     Audit {
         path: Option<PathBuf>,
     },
@@ -76,6 +77,7 @@ fn main() -> Result<()> {
         Command::Test => cmd::test::run(),
         Command::Lint => cmd::lint::run(),
         Command::Typecheck => cmd::typecheck::run(),
+        Command::WebDeploy => cmd::web_deploy::run(),
         Command::Audit { path } => cmd::audit::run(path),
         Command::Init {
             base_branch,

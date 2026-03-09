@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -18,5 +20,18 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Run harness pipeline
         run: make ci
+
+      - name: Deploy web when deploy surface changes
+        env:
+          HARNESS_WEB_DEPLOY_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HARNESS_WEB_DEPLOY_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: harness/target/release/harnesscli web-deploy
