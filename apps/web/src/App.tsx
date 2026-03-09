@@ -24,6 +24,7 @@ export default function App({
         <h1>SpecHub</h1>
         <p className="hero-copy">Open community marketplace for sharable specs.</p>
         <p className="hero-copy">Browse repository-backed specs, inspect details, and copy install commands.</p>
+        <p className="hero-copy">Each install command downloads the full spec folder, including files next to <code>SPEC.md</code>.</p>
       </header>
 
       {specs.length === 0 ? (
@@ -75,6 +76,9 @@ export default function App({
                 <p>{detailSpec.description}</p>
                 <p>
                   Source: <code>{detailSpec.specPath}</code>
+                </p>
+                <p>
+                  Install commands copy the full <code>{detailSpec.specPath}</code> directory, not just <code>SPEC.md</code>.
                 </p>
                 <h3>Install command</h3>
                 <pre className="install-command">{detailSpec.installCommand}</pre>

@@ -30,6 +30,9 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'SpecHub' })).toBeInTheDocument();
     expect(screen.getByText('Open community marketplace for sharable specs.')).toBeInTheDocument();
+    expect(
+      screen.getByText((_, element) => element?.textContent === 'Each install command downloads the full spec folder, including files next to SPEC.md.'),
+    ).toBeInTheDocument();
 
     expect(screen.getAllByRole('heading', { name: 'Create Harness' })).toHaveLength(2);
     expect(screen.getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
@@ -37,6 +40,9 @@ describe('App', () => {
     fireEvent.click(screen.getByLabelText('View details for docs-blueprint'));
     expect(screen.getAllByRole('heading', { name: 'Docs Blueprint' })).toHaveLength(2);
     expect(screen.getAllByText('Generate canonical docs structure.')).toHaveLength(2);
+    expect(
+      screen.getByText((_, element) => element?.textContent === 'Install commands copy the full specs/docs-blueprint directory, not just SPEC.md.'),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('Copy install command for docs-blueprint'));
     expect(copyMock).toHaveBeenCalledWith(

@@ -8,6 +8,10 @@ import { loadSpecCatalogFromRepository } from './src/lib/spec-discovery';
 const SPEC_CATALOG_VIRTUAL_ID = 'virtual:spec-catalog';
 const RESOLVED_SPEC_CATALOG_VIRTUAL_ID = `\0${SPEC_CATALOG_VIRTUAL_ID}`;
 
+export function resolveRepoRef(refFromEnv?: string): string {
+  return refFromEnv?.trim() || 'main';
+}
+
 function gitOutput(repoRoot: string, args: string[]): string | null {
   try {
     const output = execFileSync('git', ['-C', repoRoot, ...args], {
@@ -27,7 +31,7 @@ function detectRepoSource(repoRoot: string): RepoSource | undefined {
   if (ownerRepoFromEnv && refFromEnv) {
     return {
       ownerRepo: ownerRepoFromEnv,
-      ref: refFromEnv,
+      ref: resolveRepoRef(refFromEnv),
     };
   }
 
@@ -41,12 +45,9 @@ function detectRepoSource(repoRoot: string): RepoSource | undefined {
     return undefined;
   }
 
-  const originHead = gitOutput(repoRoot, ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']);
-  const ref = originHead?.startsWith('origin/') ? originHead.slice('origin/'.length) : 'main';
-
   return {
     ownerRepo,
-    ref: ref || 'main',
+    ref: resolveRepoRef(refFromEnv),
   };
 }
 

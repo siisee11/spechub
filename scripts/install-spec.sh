@@ -30,6 +30,11 @@ if [ ! -d "$spec_source" ]; then
   exit 1
 fi
 
+if [ ! -f "$spec_source/SPEC.md" ]; then
+  echo "spec '$spec_slug' is missing SPEC.md in ${repo}@${ref}" >&2
+  exit 1
+fi
+
 if [ -e "$spec_target" ]; then
   echo "destination '$spec_target' already exists" >&2
   exit 1
