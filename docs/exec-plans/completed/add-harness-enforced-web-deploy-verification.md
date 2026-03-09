@@ -14,7 +14,7 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 - [x] Milestone 2: Implement harness/project workflow logic that runs deploy commands only when web/deploy-surface changes are detected.
 - [x] Milestone 3: Implement deterministic post-deploy verification (for example: extract deployment URL/metadata and assert revision-target consistency plus reachability) and wire hard failure behavior.
 - [x] Milestone 4: Add/extend automated tests to cover change detection, deploy/verify orchestration, and failure modes with repository-required coverage levels.
-- [ ] Milestone 5: Add minimal canonical documentation updates describing trigger conditions and verification contract; run relevant repository checks and record outcomes.
+- [x] Milestone 5: Add minimal canonical documentation updates describing trigger conditions and verification contract; run relevant repository checks and record outcomes.
 
 ## Current progress
 
@@ -60,6 +60,15 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 - Added deterministic env-scoping helper in tests to prevent cross-test env leakage while exercising command overrides.
 - Verified with:
   - `cargo test --manifest-path harness/Cargo.toml` (31 passing tests)
+- Finalized canonical documentation for the trigger + verification contract in `docs/design-docs/web-deploy-trigger-contract.md`:
+  - CI/harness integration entrypoint
+  - trigger detection inputs and machine-readable source
+  - deploy execution contract
+  - deterministic verification requirements and failure behavior
+- Recorded final verification commands and outcomes (2026-03-09):
+  - `cargo test --manifest-path harness/Cargo.toml` ✅
+  - `HARNESS_WEB_CHANGED_FILES='apps/web/src/main.tsx' HARNESS_WEB_DEPLOY_INSTALL_CMD='true' HARNESS_WEB_DEPLOY_CMD=\"printf 'https://example.pages.dev\\n'\" HARNESS_WEB_DEPLOY_VERIFY_CMD='true' cargo run --quiet --manifest-path harness/Cargo.toml -- web-deploy` ✅
+  - `make lint` ⚠️ fails on pre-existing unrelated line-budget warnings in `scripts/ralph-loop/lib/codex-client.mts` and `scripts/ralph-loop/lib/driver.mts`
 
 ## Key decisions
 
@@ -73,7 +82,7 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 
 ## Remaining issues / open questions
 
-- Milestone 5 will finalize minimal canonical docs updates for the verification contract and record repository-check outcomes for this workstream.
+- None.
 
 ## Links to related documents
 

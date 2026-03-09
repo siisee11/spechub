@@ -4,8 +4,6 @@
 
 Define the canonical change-detection contract for harness-enforced web deploy verification.
 
-This document covers milestone 1 only: where detection should live and which paths are considered deploy-triggering changes.
-
 ## Audited decision points
 
 Current project execution path:
@@ -14,7 +12,7 @@ Current project execution path:
 2. `make ci` in `Makefile.harness` orchestrates `harnesscli` checks.
 3. Cloudflare deploy commands are already checked in as npm scripts (`package.json` delegating to `apps/web/package.json`).
 
-Conclusion: web-change detection should be enforced inside the harness/CI workflow path (the same `harness.yml` -> `make ci` chain), not as a standalone ad hoc script outside repository control surfaces.
+Conclusion: web-change detection and deployment verification are enforced inside the harness/CI workflow path (`harness.yml` -> `make ci` -> `harnesscli web-deploy`), not as standalone ad hoc scripts.
 
 ## Trigger contract (v1)
 
@@ -40,4 +38,32 @@ Canonical path globs are duplicated in:
 
 - `harness/config/web-deploy-trigger-paths.txt`
 
-Implementation milestones must consume that file for decision logic so trigger rules stay centralized.
+`harnesscli web-deploy` consumes this file so trigger rules stay centralized.
+
+## Workflow contract
+
+- CI entrypoint: `.github/workflows/harness.yml`.
+- Harness command: `harness/target/release/harnesscli web-deploy`.
+- Change detection inputs:
+  - `HARNESS_WEB_DEPLOY_BASE_SHA` and `HARNESS_WEB_DEPLOY_HEAD_SHA` in CI.
+  - fallback to `git diff HEAD~1..HEAD` when explicit SHAs are not set.
+  - `HARNESS_WEB_CHANGED_FILES` override for deterministic tests.
+- Deploy command path:
+  - install: `npm --prefix apps/web ci`
+  - deploy: `npm run web:cf:build-and-deploy`
+  - both are overrideable for tests with `HARNESS_WEB_DEPLOY_INSTALL_CMD` and `HARNESS_WEB_DEPLOY_CMD`.
+
+## Verification contract
+
+`harnesscli web-deploy` must fail unless all of the following hold:
+
+1. A deploy-surface path changed.
+2. Deploy command succeeds.
+3. Deploy output contains a deployment HTTPS URL (prefer `*.pages.dev` when present).
+4. Deployment URL returns HTTP 2xx/3xx within bounded retries.
+
+Verification behavior details:
+
+- Default reachability check uses `curl` with follow redirects and timeout.
+- Retries are bounded and deterministic (`6` attempts, `2s` delay).
+- Verification can be override-driven in tests via `HARNESS_WEB_DEPLOY_VERIFY_CMD`.
