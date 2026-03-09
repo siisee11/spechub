@@ -11,7 +11,7 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 ## Milestones
 
 - [x] Milestone 1: Scaffold `apps/web` as a standalone Vite + React app and wire deterministic local build/dev scripts from repository root tooling.
-- [ ] Milestone 2: Implement repository-backed spec discovery and parsing logic (from `specs/`) with full automated test coverage for parsing, data loading, and command generation.
+- [x] Milestone 2: Implement repository-backed spec discovery and parsing logic (from `specs/`) with full automated test coverage for parsing, data loading, and command generation.
 - [ ] Milestone 3: Build website UX (homepage + spec listing + per-spec presentation + copyable install command) with clear SpecHub positioning copy.
 - [ ] Milestone 4: Remove product-website ownership from `harnesscli` and preserve harness responsibilities only.
 - [ ] Milestone 5: Add Wrangler config/deploy commands and document Cloudflare auth/env/setup, local run, build, and deploy workflow.
@@ -28,6 +28,10 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 - Added root-level frontend scripts (`web:install`, `web:dev`, `web:build`, `web:preview`, `web:typecheck`, `web:test`) for deterministic local execution from repository tooling.
 - Added frontend test harness with 100% coverage thresholds and passing tests for bootstrap and initial UI copy.
 - Verified Milestone 1 with `npm run web:typecheck`, `npm run web:test`, and `npm run web:build`.
+- Added reusable frontend catalog logic in `apps/web/src/lib/spec-catalog.ts` for markdown parsing, GitHub remote parsing, slug extraction, and install-command generation.
+- Added repository-backed discovery logic in `apps/web/src/lib/spec-discovery.ts` to load `specs/*/SPEC.md` entries and materialize sorted catalog entries.
+- Added full automated test coverage for parser, data loading, and command generation in `apps/web/src/lib/spec-catalog.test.ts` and `apps/web/src/lib/spec-discovery.test.ts`.
+- Verified Milestone 2 with `npm run web:typecheck`, `npm run web:test` (100% statements/branches/functions/lines), and `npm run web:build`.
 
 ## Key decisions
 
