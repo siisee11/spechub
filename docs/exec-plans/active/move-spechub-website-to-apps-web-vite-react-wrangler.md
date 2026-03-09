@@ -10,7 +10,7 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 
 ## Milestones
 
-- [ ] Milestone 1: Scaffold `apps/web` as a standalone Vite + React app and wire deterministic local build/dev scripts from repository root tooling.
+- [x] Milestone 1: Scaffold `apps/web` as a standalone Vite + React app and wire deterministic local build/dev scripts from repository root tooling.
 - [ ] Milestone 2: Implement repository-backed spec discovery and parsing logic (from `specs/`) with full automated test coverage for parsing, data loading, and command generation.
 - [ ] Milestone 3: Build website UX (homepage + spec listing + per-spec presentation + copyable install command) with clear SpecHub positioning copy.
 - [ ] Milestone 4: Remove product-website ownership from `harnesscli` and preserve harness responsibilities only.
@@ -24,6 +24,10 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 - Handled `git stash push` failure with a PATH-scoped no-op shim as required.
 - Init then failed during checkout/worktree transition; per instructions, continued in the current repository tree/branch instead of further git workarounds.
 - Created this active execution plan as the source of truth for implementation.
+- Added standalone `apps/web` Vite + React + TypeScript scaffold (independent from `harnesscli`) with baseline homepage placeholder.
+- Added root-level frontend scripts (`web:install`, `web:dev`, `web:build`, `web:preview`, `web:typecheck`, `web:test`) for deterministic local execution from repository tooling.
+- Added frontend test harness with 100% coverage thresholds and passing tests for bootstrap and initial UI copy.
+- Verified Milestone 1 with `npm run web:typecheck`, `npm run web:test`, and `npm run web:build`.
 
 ## Key decisions
 

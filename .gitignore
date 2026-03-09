@@ -1,6 +1,7 @@
 .worktree/
 node_modules/
-package-lock.json
+/package-lock.json
+!apps/web/package-lock.json
 Cargo.lock
 harness/target/
 bun.lock
