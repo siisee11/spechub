@@ -12,7 +12,7 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 
 - [x] Milestone 1: Audit existing harness and CI decision points to identify where web-change detection should live, then codify the deploy trigger contract (paths and rationale).
 - [x] Milestone 2: Implement harness/project workflow logic that runs deploy commands only when web/deploy-surface changes are detected.
-- [ ] Milestone 3: Implement deterministic post-deploy verification (for example: extract deployment URL/metadata and assert revision-target consistency plus reachability) and wire hard failure behavior.
+- [x] Milestone 3: Implement deterministic post-deploy verification (for example: extract deployment URL/metadata and assert revision-target consistency plus reachability) and wire hard failure behavior.
 - [ ] Milestone 4: Add/extend automated tests to cover change detection, deploy/verify orchestration, and failure modes with repository-required coverage levels.
 - [ ] Milestone 5: Add minimal canonical documentation updates describing trigger conditions and verification contract; run relevant repository checks and record outcomes.
 
@@ -42,6 +42,15 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
   - sets base/head SHAs for deterministic change detection
   - runs `harness/target/release/harnesscli web-deploy`
   - runs checked-in deploy command (`npm run web:cf:build-and-deploy`) only when gated changes are detected
+- Implemented deterministic post-deploy verification in `harnesscli web-deploy`:
+  - captures deploy output and extracts the deployed HTTPS URL (preferring `*.pages.dev`)
+  - fails when no deployment URL is emitted
+  - verifies reachability with bounded retry (`curl` HTTP status check) and fails on non-2xx/3xx responses
+  - keeps a test override path (`HARNESS_WEB_DEPLOY_VERIFY_CMD`) for deterministic automated testing
+- Split `web_deploy` command internals into focused modules to stay inside harness source-file budget lint constraints:
+  - `harness/src/cmd/web_deploy_changes.rs`
+  - `harness/src/cmd/web_deploy_verify.rs`
+  - `harness/src/cmd/web_deploy_test.rs`
 
 ## Key decisions
 
@@ -51,10 +60,11 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 - Use the existing CI chain (`harness.yml` -> `make ci`) as the canonical integration point for deploy gating and verification.
 - Centralize trigger path definitions in `harness/config/web-deploy-trigger-paths.txt` so implementation and docs consume one contract.
 - Keep deploy execution behind a dedicated harness CLI command (`harnesscli web-deploy`) so workflow logic remains thin and testable.
+- Treat deployment verification as an explicit contract: deploy output must yield a URL, and that URL must return an HTTP success/redirect status within bounded retries.
 
 ## Remaining issues / open questions
 
-- Confirm the most robust verification signal available from Wrangler output/API for asserting that the deployed target maps to the current revision/build.
+- Milestone 4 will expand tests further to cover added deploy/verify failure-mode paths under repository coverage requirements.
 
 ## Links to related documents
 
