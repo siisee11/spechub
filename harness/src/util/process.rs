@@ -5,6 +5,11 @@ use std::process::{Command, Stdio};
 
 use anyhow::{anyhow, Context, Result};
 
+pub struct CommandOutput {
+    pub stdout: String,
+    pub stderr: String,
+}
+
 pub fn run_command<I, S>(program: &str, args: I, cwd: Option<&Path>, label: &str) -> Result<()>
 where
     I: IntoIterator<Item = S>,
@@ -42,8 +47,48 @@ where
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
+pub fn capture_command_output<I, S>(
+    program: &str,
+    args: I,
+    cwd: Option<&Path>,
+    label: &str,
+) -> Result<CommandOutput>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    let mut command = Command::new(program);
+    command.args(args);
+    if let Some(cwd) = cwd {
+        command.current_dir(cwd);
+    }
+    let output = command
+        .output()
+        .with_context(|| format!("failed to start {label}"))?;
+    if !output.status.success() {
+        return Err(anyhow!(
+            "{label} failed with status {}.\nstdout:\n{}\nstderr:\n{}",
+            output.status,
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+    Ok(CommandOutput {
+        stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+        stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+    })
+}
+
 pub fn run_shell(command: &str, cwd: Option<&Path>, label: &str) -> Result<()> {
     run_command("sh", ["-lc", command], cwd, label)
+}
+
+pub fn capture_shell_output(
+    command: &str,
+    cwd: Option<&Path>,
+    label: &str,
+) -> Result<CommandOutput> {
+    capture_command_output("sh", ["-lc", command], cwd, label)
 }
 
 pub fn spawn_background(

@@ -8,3 +8,4 @@ pub mod serve;
 pub mod smoke;
 pub mod test;
 pub mod typecheck;
+pub mod web_deploy;
