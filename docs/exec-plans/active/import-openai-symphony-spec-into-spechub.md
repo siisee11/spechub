@@ -7,7 +7,7 @@ Import `openai/symphony` as a third-party Apache-2.0 spec under `specs/symphony/
 The upstream source is `https://github.com/openai/symphony/blob/main/SPEC.md`. Apache-2.0 redistribution requires preserving license and attribution notices, including upstream `NOTICE` text where provided. This import must remain explicitly upstream-authored content, not Spechub-original content.
 
 ## Milestones
-- [ ] Initialize harness context and confirm branch/worktree handling constraints for this environment.
+- [x] Initialize harness context and confirm branch/worktree handling constraints for this environment.
 - [x] Fetch upstream `SPEC.md`, `LICENSE`, and `NOTICE` from `openai/symphony` and capture canonical source URLs.
 - [x] Create `specs/symphony/` with `SPEC.md` plus Apache-2.0 compliance files (`LICENSE` and `NOTICE`) and a concise upstream attribution/metadata note.
 - [x] Verify install/discovery compatibility with current conventions (`scripts/install-spec.sh` behavior and `specs/*/SPEC.md` scanning assumptions).
