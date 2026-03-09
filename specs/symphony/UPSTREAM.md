@@ -26,3 +26,9 @@ This directory vendors third-party specification content from `openai/symphony`.
 - `SPEC.md`: `15aeef8444c54f8f7b2a8ed270796e4604db3370923eafe6627337cd4afb6552`
 - `LICENSE`: `c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4`
 - `NOTICE`: `38c76eb8701e52953f63154a77b407667a6ee34c3a2a8785c8f8b2cd5494d09d`
+
+## Modification status
+
+- `SPEC.md`: unmodified copy of upstream file at commit `b0e0ff0082236a73c12a48483d0c6036fdd31fe1`.
+- `LICENSE`: unmodified copy of upstream file at commit `b0e0ff0082236a73c12a48483d0c6036fdd31fe1`.
+- `NOTICE`: unmodified copy of upstream file at commit `b0e0ff0082236a73c12a48483d0c6036fdd31fe1`.

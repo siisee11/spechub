@@ -9,7 +9,7 @@ The upstream source is `https://github.com/openai/symphony/blob/main/SPEC.md`. A
 ## Milestones
 - [ ] Initialize harness context and confirm branch/worktree handling constraints for this environment.
 - [x] Fetch upstream `SPEC.md`, `LICENSE`, and `NOTICE` from `openai/symphony` and capture canonical source URLs.
-- [ ] Create `specs/symphony/` with `SPEC.md` plus Apache-2.0 compliance files (`LICENSE` and `NOTICE`) and a concise upstream attribution/metadata note.
+- [x] Create `specs/symphony/` with `SPEC.md` plus Apache-2.0 compliance files (`LICENSE` and `NOTICE`) and a concise upstream attribution/metadata note.
 - [ ] Verify install/discovery compatibility with current conventions (`scripts/install-spec.sh` behavior and `specs/*/SPEC.md` scanning assumptions).
 - [ ] Run focused validation, update plan progress, and prepare final summary with exact files changed and modification-status declaration.
 
@@ -19,6 +19,7 @@ The upstream source is `https://github.com/openai/symphony/blob/main/SPEC.md`. A
 - Worktree/checkout setup remained blocked by git index lock permissions in this environment, so execution continues in current repository tree and current branch per task instructions.
 - Canonical docs reviewed: `AGENTS.md`, `ARCHITECTURE.md`, `NON_NEGOTIABLE_RULES.md`, and `docs/PLANS.md`.
 - Upstream files fetched from `openai/symphony` (`SPEC.md`, `LICENSE`, `NOTICE`) and canonical source URLs captured in `specs/symphony/UPSTREAM.md`, including commit ref and integrity hashes.
+- Imported upstream files into `specs/symphony/` as `SPEC.md`, `LICENSE`, and `NOTICE`; updated `UPSTREAM.md` with explicit per-file modification status (currently unmodified copies).
 
 ## Key decisions
 - Treat `specs/symphony/` as vendored third-party upstream material with explicit provenance.
@@ -27,7 +28,6 @@ The upstream source is `https://github.com/openai/symphony/blob/main/SPEC.md`. A
 
 ## Remaining issues / open questions
 - Confirm whether `scripts/install-spec.sh` requires any companion filenames beyond `SPEC.md` for this spec family.
-- Confirm whether repository convention prefers an attribution filename such as `UPSTREAM.md` or `SOURCE.md`.
 
 ## Links to related documents
 - `AGENTS.md`
