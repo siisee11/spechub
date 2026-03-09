@@ -1,0 +1,5 @@
+apps/web/**
+specs/**
+package.json
+Makefile.harness
+.github/workflows/harness.yml

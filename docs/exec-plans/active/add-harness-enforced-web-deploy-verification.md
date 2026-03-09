@@ -10,7 +10,7 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 
 ## Milestones
 
-- [ ] Milestone 1: Audit existing harness and CI decision points to identify where web-change detection should live, then codify the deploy trigger contract (paths and rationale).
+- [x] Milestone 1: Audit existing harness and CI decision points to identify where web-change detection should live, then codify the deploy trigger contract (paths and rationale).
 - [ ] Milestone 2: Implement harness/project workflow logic that runs deploy commands only when web/deploy-surface changes are detected.
 - [ ] Milestone 3: Implement deterministic post-deploy verification (for example: extract deployment URL/metadata and assert revision-target consistency plus reachability) and wire hard failure behavior.
 - [ ] Milestone 4: Add/extend automated tests to cover change detection, deploy/verify orchestration, and failure modes with repository-required coverage levels.
@@ -31,18 +31,23 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 - Init failed because git could not create `.git/index.lock` (`Operation not permitted`) during checkout/worktree setup in this sandboxed environment.
 - Per task instructions, continued in the current repository tree/branch rather than attempting unrelated git workarounds.
 - Created this active execution plan as the source of truth for implementation.
+- Audited current decision points across `.github/workflows/harness.yml`, `Makefile.harness`, and checked-in web deploy npm scripts (`package.json` + `apps/web/package.json`).
+- Codified the trigger contract in:
+  - `docs/design-docs/web-deploy-trigger-contract.md` (canonical rationale + integration location)
+  - `harness/config/web-deploy-trigger-paths.txt` (machine-readable trigger glob set)
+- Updated `docs/design-docs/index.md` to include the new canonical design document.
 
 ## Key decisions
 
 - Keep deploy/verification orchestration inside existing harness/project workflow surfaces instead of ad hoc standalone scripts.
 - Treat deploy verification as a contract with explicit machine-checkable assertions; command success alone is insufficient.
 - Keep web deploy gating path-based and explicit so non-web changes skip this path by design.
+- Use the existing CI chain (`harness.yml` -> `make ci`) as the canonical integration point for deploy gating and verification.
+- Centralize trigger path definitions in `harness/config/web-deploy-trigger-paths.txt` so implementation and docs consume one contract.
 
 ## Remaining issues / open questions
 
-- Determine the exact canonical location for change-detection logic based on current harness command boundaries.
 - Confirm the most robust verification signal available from Wrangler output/API for asserting that the deployed target maps to the current revision/build.
-- Clarify which non-`apps/web` files should be included in deploy-surface triggers (for example, shared workspace files that alter web build or deployment behavior).
 
 ## Links to related documents
 
@@ -50,6 +55,7 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 - [Non-Negotiable Rules](../../../NON_NEGOTIABLE_RULES.md)
 - [Execution Plans](../../../docs/PLANS.md)
 - [Harness Blueprint](../../../docs/design-docs/harness-blueprint.md)
+- [Web Deploy Trigger Contract](../../../docs/design-docs/web-deploy-trigger-contract.md)
 - [Worktree Runtime](../../../docs/design-docs/worktree-runtime.md)
 - [Create Harness Product Spec](../../../docs/product-specs/create-harness.md)
 - [Create Harness Source Spec](../../../create-harness/SPEC.md)
