@@ -10,7 +10,7 @@ The upstream source is `https://github.com/openai/symphony/blob/main/SPEC.md`. A
 - [ ] Initialize harness context and confirm branch/worktree handling constraints for this environment.
 - [x] Fetch upstream `SPEC.md`, `LICENSE`, and `NOTICE` from `openai/symphony` and capture canonical source URLs.
 - [x] Create `specs/symphony/` with `SPEC.md` plus Apache-2.0 compliance files (`LICENSE` and `NOTICE`) and a concise upstream attribution/metadata note.
-- [ ] Verify install/discovery compatibility with current conventions (`scripts/install-spec.sh` behavior and `specs/*/SPEC.md` scanning assumptions).
+- [x] Verify install/discovery compatibility with current conventions (`scripts/install-spec.sh` behavior and `specs/*/SPEC.md` scanning assumptions).
 - [ ] Run focused validation, update plan progress, and prepare final summary with exact files changed and modification-status declaration.
 
 ## Current progress
@@ -20,6 +20,10 @@ The upstream source is `https://github.com/openai/symphony/blob/main/SPEC.md`. A
 - Canonical docs reviewed: `AGENTS.md`, `ARCHITECTURE.md`, `NON_NEGOTIABLE_RULES.md`, and `docs/PLANS.md`.
 - Upstream files fetched from `openai/symphony` (`SPEC.md`, `LICENSE`, `NOTICE`) and canonical source URLs captured in `specs/symphony/UPSTREAM.md`, including commit ref and integrity hashes.
 - Imported upstream files into `specs/symphony/` as `SPEC.md`, `LICENSE`, and `NOTICE`; updated `UPSTREAM.md` with explicit per-file modification status (currently unmodified copies).
+- Verified install and discovery compatibility:
+  - `bun test scripts/install-spec.test.mts` passed (2/2), confirming companion-file copy behavior and `SPEC.md` requirement for install.
+  - `npm --prefix apps/web exec vitest run src/lib/spec-discovery.test.ts --coverage=false` passed (3/3), confirming `specs/*/SPEC.md` discovery logic.
+  - `find specs -mindepth 2 -maxdepth 2 -name SPEC.md | sort` includes `specs/symphony/SPEC.md`.
 
 ## Key decisions
 - Treat `specs/symphony/` as vendored third-party upstream material with explicit provenance.
@@ -27,7 +31,7 @@ The upstream source is `https://github.com/openai/symphony/blob/main/SPEC.md`. A
 - Keep changes narrowly scoped to the Symphony spec folder and minimal supporting metadata required for legal/compliance clarity.
 
 ## Remaining issues / open questions
-- Confirm whether `scripts/install-spec.sh` requires any companion filenames beyond `SPEC.md` for this spec family.
+- None for install/discovery compatibility; final milestone remains to package focused validation summary and exact file-change/modification-status declaration.
 
 ## Links to related documents
 - `AGENTS.md`

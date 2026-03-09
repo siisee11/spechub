@@ -32,3 +32,11 @@ This directory vendors third-party specification content from `openai/symphony`.
 - `SPEC.md`: unmodified copy of upstream file at commit `b0e0ff0082236a73c12a48483d0c6036fdd31fe1`.
 - `LICENSE`: unmodified copy of upstream file at commit `b0e0ff0082236a73c12a48483d0c6036fdd31fe1`.
 - `NOTICE`: unmodified copy of upstream file at commit `b0e0ff0082236a73c12a48483d0c6036fdd31fe1`.
+
+## Install/discovery compatibility verification
+
+Validated on 2026-03-09 against current repository conventions:
+
+- `bun test scripts/install-spec.test.mts` passed (2/2), confirming `scripts/install-spec.sh` copies companion files from the spec directory and enforces `SPEC.md` presence.
+- `npm --prefix apps/web exec vitest run src/lib/spec-discovery.test.ts --coverage=false` passed (3/3), confirming repository discovery behavior for `specs/*/SPEC.md`.
+- `find specs -mindepth 2 -maxdepth 2 -name SPEC.md | sort` includes `specs/symphony/SPEC.md`.
