@@ -1,0 +1,26 @@
+principles:
+  - id: shell-strict-mode
+    description: Harness shell scripts must run with strict mode enabled.
+    detection_kind: shell-strict
+    remediation: Add `set -euo pipefail` near the top of the script.
+    severity: warn
+    automerge: true
+  - id: no-wildcard-re-exports
+    description: Public modules must not use wildcard re-exports.
+    detection_kind: wildcard-export
+    remediation: Replace `export *` with explicit named exports.
+    severity: warn
+    automerge: true
+  - id: keep-source-files-focused
+    description: Source and script files should stay small enough for fast agent comprehension.
+    detection_kind: file-size
+    max_lines: 260
+    remediation: Split oversized files into focused helpers.
+    severity: warn
+    automerge: true
+  - id: docs-as-infrastructure
+    description: Canonical repository docs must exist and stay linked from AGENTS.md.
+    detection_kind: docs-links
+    remediation: Restore the missing canonical docs and links.
+    severity: error
+    automerge: false

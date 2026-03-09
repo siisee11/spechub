@@ -1,0 +1,10 @@
+{
+  "name": "spechub",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ralph-loop": "bun run scripts/ralph-loop/ralph-loop.mts",
+    "test:ralph-loop": "bun test scripts/ralph-loop",
+    "lint:scripts": "bun test scripts/ralph-loop"
+  }
+}

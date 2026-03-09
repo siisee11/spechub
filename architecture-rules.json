@@ -1,0 +1,26 @@
+{
+  "rust": {
+    "disallow": [
+      {
+        "from_prefix": "harness/src/cmd/",
+        "to_prefix": "harness/src/cmd/",
+        "allow_same_file_module": true,
+        "message": "Command implementations must not depend on sibling command implementations. Move shared logic into util or lint modules."
+      },
+      {
+        "from_prefix": "harness/src/util/",
+        "to_prefix": "harness/src/cmd/",
+        "message": "Utility modules are foundational and cannot depend on command modules."
+      }
+    ]
+  },
+  "typescript": {
+    "disallow": [
+      {
+        "from_prefix": "scripts/ralph-loop/lib/",
+        "to_prefix": "scripts/ralph-loop/ralph-loop.mts",
+        "message": "Ralph loop libraries must remain reusable and cannot import the CLI entrypoint."
+      }
+    ]
+  }
+}

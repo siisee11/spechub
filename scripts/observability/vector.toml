@@ -1,0 +1,25 @@
+# Generated at runtime by `harnesscli observability start`.
+# This template documents the intended shape of the local collector.
+
+[sources.logs]
+type = "http_server"
+address = "${VECTOR_LOG_ADDRESS}"
+
+[sources.otlp]
+type = "opentelemetry"
+grpc.address = "${VECTOR_OTLP_ADDRESS}"
+
+[sinks.logs]
+type = "http"
+inputs = ["logs"]
+uri = "${VLOGS_QUERY_URL}"
+
+[sinks.metrics]
+type = "http"
+inputs = ["otlp"]
+uri = "${VMETRICS_QUERY_URL}"
+
+[sinks.traces]
+type = "http"
+inputs = ["otlp"]
+uri = "${VTRACES_QUERY_URL}"
