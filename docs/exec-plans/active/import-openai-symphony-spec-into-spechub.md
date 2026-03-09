@@ -11,7 +11,7 @@ The upstream source is `https://github.com/openai/symphony/blob/main/SPEC.md`. A
 - [x] Fetch upstream `SPEC.md`, `LICENSE`, and `NOTICE` from `openai/symphony` and capture canonical source URLs.
 - [x] Create `specs/symphony/` with `SPEC.md` plus Apache-2.0 compliance files (`LICENSE` and `NOTICE`) and a concise upstream attribution/metadata note.
 - [x] Verify install/discovery compatibility with current conventions (`scripts/install-spec.sh` behavior and `specs/*/SPEC.md` scanning assumptions).
-- [ ] Run focused validation, update plan progress, and prepare final summary with exact files changed and modification-status declaration.
+- [x] Run focused validation, update plan progress, and prepare final summary with exact files changed and modification-status declaration.
 
 ## Current progress
 - Harness init attempted with `--base-branch main` and `--work-branch ralph/import-openai-symphony-spec-into-spechub-goal-im`.
@@ -24,6 +24,10 @@ The upstream source is `https://github.com/openai/symphony/blob/main/SPEC.md`. A
   - `bun test scripts/install-spec.test.mts` passed (2/2), confirming companion-file copy behavior and `SPEC.md` requirement for install.
   - `npm --prefix apps/web exec vitest run src/lib/spec-discovery.test.ts --coverage=false` passed (3/3), confirming `specs/*/SPEC.md` discovery logic.
   - `find specs -mindepth 2 -maxdepth 2 -name SPEC.md | sort` includes `specs/symphony/SPEC.md`.
+- Final focused validation rerun on 2026-03-09:
+  - `bun test scripts/install-spec.test.mts` passed (2/2).
+  - `npm --prefix apps/web exec vitest run src/lib/spec-discovery.test.ts --coverage=false` passed (3/3).
+  - `shasum -a 256 specs/symphony/SPEC.md specs/symphony/LICENSE specs/symphony/NOTICE` matches previously recorded upstream hashes in `specs/symphony/UPSTREAM.md`.
 
 ## Key decisions
 - Treat `specs/symphony/` as vendored third-party upstream material with explicit provenance.
@@ -31,7 +35,20 @@ The upstream source is `https://github.com/openai/symphony/blob/main/SPEC.md`. A
 - Keep changes narrowly scoped to the Symphony spec folder and minimal supporting metadata required for legal/compliance clarity.
 
 ## Remaining issues / open questions
-- None for install/discovery compatibility; final milestone remains to package focused validation summary and exact file-change/modification-status declaration.
+- None.
+
+## Final summary
+- Exact files changed for this import scope:
+  - `specs/symphony/SPEC.md`
+  - `specs/symphony/LICENSE`
+  - `specs/symphony/NOTICE`
+  - `specs/symphony/UPSTREAM.md`
+  - `docs/exec-plans/active/import-openai-symphony-spec-into-spechub.md`
+- Modification-status declaration:
+  - `specs/symphony/SPEC.md` is an unmodified upstream copy from `openai/symphony` (`main` @ `b0e0ff0082236a73c12a48483d0c6036fdd31fe1`).
+  - `specs/symphony/LICENSE` is an unmodified upstream copy from the same commit.
+  - `specs/symphony/NOTICE` is an unmodified upstream copy from the same commit.
+  - `specs/symphony/UPSTREAM.md` is Spechub-authored attribution/compliance metadata documenting source, hashes, and verification.
 
 ## Links to related documents
 - `AGENTS.md`
