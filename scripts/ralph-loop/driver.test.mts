@@ -85,6 +85,39 @@ test("setup phase extracts init output and absolute plan path", async () => {
   expect(result.initOutput.worktree_id).toBe("wt-1");
 });
 
+test("setup phase falls back to inferred init output when setup emits only a plan path", async () => {
+  const repoRoot = await mkdtemp(`${tmpdir()}/spechub-repo-`);
+  await mkdir(`${repoRoot}/docs/exec-plans/active`, { recursive: true });
+  await Bun.write(
+    `${repoRoot}/docs/exec-plans/active/task.md`,
+    "# plan\n",
+  );
+  const session = createFakeSession([
+    {
+      turnId: "turn_setup",
+      status: "completed",
+      agentText: "docs/exec-plans/active/task.md\n<promise>COMPLETE</promise>",
+      items: [],
+    },
+  ]);
+
+  const result = await runSetupPhase(session, {
+    task: "Task",
+    model: "gpt-5.3-codex",
+    baseBranch: "main",
+    workBranch: "ralph/task",
+    repoRoot,
+    expectedPlanPath: "docs/exec-plans/active/task.md",
+    approvalPolicy: "never",
+    sandbox: "workspace-write",
+  });
+
+  expect(result.planFilePath).toBe(`${repoRoot}/docs/exec-plans/active/task.md`);
+  expect(result.initOutput.worktree_path).toBe(repoRoot);
+  expect(result.initOutput.runtime_root).toBe(".worktree");
+  expect(result.initOutput.work_branch).toBe("ralph/task");
+});
+
 test("coding phase compacts on context overflow and stops on completion", async () => {
   const session = createFakeSession([
     {

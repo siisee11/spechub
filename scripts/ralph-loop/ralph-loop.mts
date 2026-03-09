@@ -59,7 +59,12 @@ async function readTask(options: CliOptions): Promise<string> {
 
 class RalphLoopLogger {
   #buffer: string[] = [];
+  #bootstrapLogPath = `${process.cwd()}/.worktree/bootstrap/logs/ralph-loop.log`;
   #logPath?: string;
+
+  async init(): Promise<void> {
+    await mkdir(`${process.cwd()}/.worktree/bootstrap/logs`, { recursive: true });
+  }
 
   async attachRuntimeRoot(runtimeRoot: string): Promise<void> {
     const resolvedRoot = resolveRuntimeRoot(process.cwd(), runtimeRoot);
@@ -72,6 +77,7 @@ class RalphLoopLogger {
   }
 
   async write(line: string): Promise<void> {
+    await appendFile(this.#bootstrapLogPath, `${line}\n`);
     if (!this.#logPath) {
       this.#buffer.push(line);
       return;
@@ -84,6 +90,7 @@ async function main(): Promise<void> {
   const options = parseArgs(Bun.argv.slice(2));
   const task = await readTask(options);
   const logger = new RalphLoopLogger();
+  await logger.init();
   const workBranch = options.workBranch ?? `ralph/${slugifyPrompt(task)}`;
 
   const outcome = await runRalphLoop(

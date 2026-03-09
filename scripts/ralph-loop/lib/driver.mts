@@ -8,6 +8,7 @@ import { buildSetupPrompt } from "./setup-agent.mts";
 import {
   extractInitOutputFromItems,
   extractPlanFilePath,
+  inferInitOutput,
   resolveRuntimeRoot,
   slugifyPrompt,
   type InitOutput,
@@ -168,15 +169,20 @@ export async function runSetupPhase(
   if (result.status === "failed") {
     throw new Error(`setup phase failed: ${result.error?.message ?? "unknown error"}`);
   }
-  const initOutput = extractInitOutputFromItems(result.items);
-  if (!initOutput) {
-    throw new Error("setup agent did not capture init output");
-  }
+  const extractedInitOutput = extractInitOutputFromItems(result.items);
   const planFilePath = await resolvePlanFilePath(
     result.agentText,
-    initOutput.worktree_path,
+    extractedInitOutput?.worktree_path ?? options.repoRoot,
     options.expectedPlanPath,
   );
+  const initOutput =
+    extractedInitOutput ??
+    inferInitOutput({
+      repoRoot: options.repoRoot,
+      planFilePath,
+      workBranch: options.workBranch,
+      baseBranch: options.baseBranch,
+    });
   return {
     initOutput,
     planFilePath,

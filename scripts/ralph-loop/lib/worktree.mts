@@ -1,3 +1,5 @@
+import { basename } from "node:path";
+
 export type InitOutput = {
   worktree_id: string;
   worktree_path: string;
@@ -61,6 +63,24 @@ export function resolveRuntimeRoot(worktreePath: string, runtimeRoot: string): s
   return `${worktreePath}/${runtimeRoot.replace(/^\.?\//, "")}`;
 }
 
+export function inferInitOutput(options: {
+  repoRoot: string;
+  planFilePath: string;
+  workBranch: string;
+  baseBranch: string;
+}): InitOutput {
+  const worktreePath = inferWorktreePath(options.planFilePath, options.repoRoot);
+  return {
+    worktree_id: basename(worktreePath) || "repo",
+    worktree_path: worktreePath,
+    work_branch: options.workBranch,
+    base_branch: options.baseBranch,
+    deps_installed: false,
+    build_verified: false,
+    runtime_root: ".worktree",
+  };
+}
+
 export function slugifyPrompt(prompt: string): string {
   return prompt
     .toLowerCase()
@@ -80,4 +100,16 @@ function tryParseInitOutput(text: string): InitOutput | undefined {
   } catch {
     return undefined;
   }
+}
+
+function inferWorktreePath(planFilePath: string, repoRoot: string): string {
+  if (!planFilePath.startsWith("/")) {
+    return repoRoot;
+  }
+  const marker = "/docs/exec-plans/";
+  const markerIndex = planFilePath.indexOf(marker);
+  if (markerIndex < 0) {
+    return repoRoot;
+  }
+  return planFilePath.slice(0, markerIndex) || repoRoot;
 }

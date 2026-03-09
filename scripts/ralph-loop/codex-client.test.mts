@@ -15,6 +15,11 @@ test("thread start request contains model and cwd", () => {
   expect(request.params.model).toBe("gpt-5.3-codex");
   expect(request.params.cwd).toBe("/tmp/repo");
   expect(request.params.serviceName).toBe("spechub_ralph_loop");
+  expect(request.params.sandboxPolicy).toEqual({
+    type: "workspaceWrite",
+    writableRoots: ["/tmp/repo"],
+    networkAccess: true,
+  });
 });
 
 test("turn start request includes prompt text", () => {

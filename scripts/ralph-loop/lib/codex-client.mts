@@ -106,6 +106,7 @@ export function createThreadStartRequest(
       cwd: options.cwd,
       approvalPolicy: options.approvalPolicy,
       sandbox: options.sandbox,
+      sandboxPolicy: buildSandboxPolicy(options.sandbox, options.cwd),
       serviceName: "spechub_ralph_loop",
     },
   };
