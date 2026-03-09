@@ -14,7 +14,7 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 - [x] Milestone 2: Implement repository-backed spec discovery and parsing logic (from `specs/`) with full automated test coverage for parsing, data loading, and command generation.
 - [x] Milestone 3: Build website UX (homepage + spec listing + per-spec presentation + copyable install command) with clear SpecHub positioning copy.
 - [x] Milestone 4: Remove product-website ownership from `harnesscli` and preserve harness responsibilities only.
-- [ ] Milestone 5: Add Wrangler config/deploy commands and document Cloudflare auth/env/setup, local run, build, and deploy workflow.
+- [x] Milestone 5: Add Wrangler config/deploy commands and document Cloudflare auth/env/setup, local run, build, and deploy workflow.
 - [ ] Milestone 6: Run repository checks relevant to touched surfaces and close with updated plan state.
 
 ## Current progress
@@ -39,6 +39,10 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 - Removed `harnesscli` product website implementation by deleting `harness/src/util/marketplace.rs` and marketplace assets/tests from the Rust control plane.
 - Updated `harness/src/cmd/serve.rs` so `serve app` now returns a minimal harness preview/status surface instead of hosting the SpecHub product marketplace UI.
 - Verified Milestone 4 with `cargo test --manifest-path harness/Cargo.toml` and `cargo build --manifest-path harness/Cargo.toml`.
+- Added Cloudflare Wrangler configuration for `apps/web` in `apps/web/wrangler.toml` and pinned Wrangler CLI as a web-app dev dependency.
+- Added repository-checked deployment commands (`cf:check`, `cf:project:create`, `cf:deploy`, `cf:deploy:preview`, `cf:build-and-deploy`) in `apps/web/package.json` with root-level wrappers in `package.json`.
+- Documented local run, build, Cloudflare auth/setup, env vars, and deploy workflow in `apps/web/README.md` (plus frontend doc pointer update in `docs/FRONTEND.md`).
+- Verified Milestone 5 with `npm run web:typecheck`, `npm run web:test` (100% statements/branches/functions/lines), and `npm run web:build`.
 
 ## Key decisions
 

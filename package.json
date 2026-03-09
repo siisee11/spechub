@@ -11,6 +11,11 @@
     "web:build": "npm --prefix apps/web run build",
     "web:preview": "npm --prefix apps/web run preview",
     "web:typecheck": "npm --prefix apps/web run typecheck",
-    "web:test": "npm --prefix apps/web run test"
+    "web:test": "npm --prefix apps/web run test",
+    "web:cf:check": "npm --prefix apps/web run cf:check",
+    "web:cf:project:create": "npm --prefix apps/web run cf:project:create",
+    "web:cf:deploy": "npm --prefix apps/web run cf:deploy",
+    "web:cf:deploy:preview": "npm --prefix apps/web run cf:deploy:preview",
+    "web:cf:build-and-deploy": "npm --prefix apps/web run cf:build-and-deploy"
   }
 }
