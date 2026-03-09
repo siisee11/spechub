@@ -13,7 +13,7 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 - [x] Milestone 1: Audit existing harness and CI decision points to identify where web-change detection should live, then codify the deploy trigger contract (paths and rationale).
 - [x] Milestone 2: Implement harness/project workflow logic that runs deploy commands only when web/deploy-surface changes are detected.
 - [x] Milestone 3: Implement deterministic post-deploy verification (for example: extract deployment URL/metadata and assert revision-target consistency plus reachability) and wire hard failure behavior.
-- [ ] Milestone 4: Add/extend automated tests to cover change detection, deploy/verify orchestration, and failure modes with repository-required coverage levels.
+- [x] Milestone 4: Add/extend automated tests to cover change detection, deploy/verify orchestration, and failure modes with repository-required coverage levels.
 - [ ] Milestone 5: Add minimal canonical documentation updates describing trigger conditions and verification contract; run relevant repository checks and record outcomes.
 
 ## Current progress
@@ -51,6 +51,15 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
   - `harness/src/cmd/web_deploy_changes.rs`
   - `harness/src/cmd/web_deploy_verify.rs`
   - `harness/src/cmd/web_deploy_test.rs`
+- Expanded automated tests in `harness/src/cmd/web_deploy_test.rs` for deploy/verify failure modes and orchestration behavior:
+  - deploy command failure propagates hard failure
+  - missing deployment URL in deploy output fails deterministically
+  - verify command failure propagates hard failure
+  - deployment URL extraction from stderr output is accepted
+  - existing positive-path and skip-path coverage retained
+- Added deterministic env-scoping helper in tests to prevent cross-test env leakage while exercising command overrides.
+- Verified with:
+  - `cargo test --manifest-path harness/Cargo.toml` (31 passing tests)
 
 ## Key decisions
 
@@ -64,7 +73,7 @@ The website at `apps/web` already has checked-in Wrangler commands, but deployme
 
 ## Remaining issues / open questions
 
-- Milestone 4 will expand tests further to cover added deploy/verify failure-mode paths under repository coverage requirements.
+- Milestone 5 will finalize minimal canonical docs updates for the verification contract and record repository-check outcomes for this workstream.
 
 ## Links to related documents
 
