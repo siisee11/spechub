@@ -1,12 +1,74 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import App from './App';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import App, { defaultCopyInstallCommand } from './App';
+import type { SpecCatalogEntry } from './lib/spec-catalog';
+
+const SAMPLE_SPECS: SpecCatalogEntry[] = [
+  {
+    slug: 'create-harness',
+    name: 'Create Harness',
+    description: 'Build a portable harness engineering system.',
+    specPath: 'specs/create-harness',
+    installCommand:
+      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "create-harness"',
+  },
+  {
+    slug: 'docs-blueprint',
+    name: 'Docs Blueprint',
+    description: 'Generate canonical docs structure.',
+    specPath: 'specs/docs-blueprint',
+    installCommand:
+      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"',
+  },
+];
 
 describe('App', () => {
-  it('renders SpecHub headline and positioning copy', () => {
-    render(<App />);
+  it('renders positioning copy, lists specs, and supports detail/copy actions', () => {
+    const copyMock = vi.fn();
+
+    render(<App specs={SAMPLE_SPECS} onCopyInstallCommand={copyMock} />);
 
     expect(screen.getByRole('heading', { name: 'SpecHub' })).toBeInTheDocument();
     expect(screen.getByText('Open community marketplace for sharable specs.')).toBeInTheDocument();
+
+    expect(screen.getAllByRole('heading', { name: 'Create Harness' })).toHaveLength(2);
+    expect(screen.getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('View details for docs-blueprint'));
+    expect(screen.getAllByRole('heading', { name: 'Docs Blueprint' })).toHaveLength(2);
+    expect(screen.getAllByText('Generate canonical docs structure.')).toHaveLength(2);
+
+    fireEvent.click(screen.getByLabelText('Copy install command for docs-blueprint'));
+    expect(copyMock).toHaveBeenCalledWith(
+      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy selected install command' }));
+    expect(copyMock).toHaveBeenCalledWith(
+      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"',
+    );
+  });
+
+  it('renders empty state when there are no specs', () => {
+    render(<App specs={[]} />);
+
+    expect(screen.getByRole('heading', { name: 'No specs found' })).toBeInTheDocument();
+    expect(screen.getByLabelText('No specs available')).toBeInTheDocument();
+  });
+});
+
+describe('defaultCopyInstallCommand', () => {
+  it('writes install command to navigator clipboard', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText,
+      },
+      configurable: true,
+    });
+
+    await defaultCopyInstallCommand('echo hi');
+
+    expect(writeText).toHaveBeenCalledWith('echo hi');
   });
 });

@@ -12,7 +12,7 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 
 - [x] Milestone 1: Scaffold `apps/web` as a standalone Vite + React app and wire deterministic local build/dev scripts from repository root tooling.
 - [x] Milestone 2: Implement repository-backed spec discovery and parsing logic (from `specs/`) with full automated test coverage for parsing, data loading, and command generation.
-- [ ] Milestone 3: Build website UX (homepage + spec listing + per-spec presentation + copyable install command) with clear SpecHub positioning copy.
+- [x] Milestone 3: Build website UX (homepage + spec listing + per-spec presentation + copyable install command) with clear SpecHub positioning copy.
 - [ ] Milestone 4: Remove product-website ownership from `harnesscli` and preserve harness responsibilities only.
 - [ ] Milestone 5: Add Wrangler config/deploy commands and document Cloudflare auth/env/setup, local run, build, and deploy workflow.
 - [ ] Milestone 6: Run repository checks relevant to touched surfaces and close with updated plan state.
@@ -32,6 +32,10 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 - Added repository-backed discovery logic in `apps/web/src/lib/spec-discovery.ts` to load `specs/*/SPEC.md` entries and materialize sorted catalog entries.
 - Added full automated test coverage for parser, data loading, and command generation in `apps/web/src/lib/spec-catalog.test.ts` and `apps/web/src/lib/spec-discovery.test.ts`.
 - Verified Milestone 2 with `npm run web:typecheck`, `npm run web:test` (100% statements/branches/functions/lines), and `npm run web:build`.
+- Implemented website UX in `apps/web/src/App.tsx` with homepage positioning copy, repository-backed spec listing, in-page per-spec detail panel, and copyable install commands.
+- Wired Vite virtual data module (`virtual:spec-catalog`) in `apps/web/vite.config.ts` so app data is sourced from repository `specs/*/SPEC.md` content at build/dev time.
+- Updated frontend tests in `apps/web/src/App.test.tsx` and `apps/web/src/main.test.tsx` to validate listing, detail interactions, and copy-command behavior.
+- Verified Milestone 3 with `npm run web:typecheck`, `npm run web:test` (100% statements/branches/functions/lines), and `npm run web:build`.
 
 ## Key decisions
 

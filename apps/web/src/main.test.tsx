@@ -8,6 +8,9 @@ vi.mock('react-dom/client', () => ({
     createRoot: createRootMock,
   },
 }));
+vi.mock('virtual:spec-catalog', () => ({
+  specCatalog: [],
+}));
 
 describe('main entrypoint', () => {
   beforeEach(() => {
