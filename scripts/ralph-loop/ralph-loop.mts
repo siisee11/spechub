@@ -1,7 +1,8 @@
-import { buildCodingPrompt } from "./lib/coding-loop.mts";
-import { buildPrPrompt } from "./lib/pr-agent.mts";
-import { buildSetupPrompt } from "./lib/setup-agent.mts";
-import { slugifyPrompt } from "./lib/worktree.mts";
+import { appendFile, mkdir } from "node:fs/promises";
+
+import { CodexAppServerClient } from "./lib/codex-client.mts";
+import { runRalphLoop } from "./lib/driver.mts";
+import { resolveRuntimeRoot, slugifyPrompt } from "./lib/worktree.mts";
 
 type CliOptions = {
   model: string;
@@ -56,20 +57,70 @@ async function readTask(options: CliOptions): Promise<string> {
   return text;
 }
 
-const options = parseArgs(Bun.argv.slice(2));
-const task = await readTask(options);
-const workBranch = options.workBranch ?? `ralph/${slugifyPrompt(task)}`;
+class RalphLoopLogger {
+  #buffer: string[] = [];
+  #logPath?: string;
 
-const output = {
-  model: options.model,
-  baseBranch: options.baseBranch,
-  workBranch,
-  setupPrompt: buildSetupPrompt({ task, baseBranch: options.baseBranch, workBranch }),
-  codingPrompt: buildCodingPrompt(task, `docs/exec-plans/active/${slugifyPrompt(task)}.md`),
-  prPrompt: buildPrPrompt(
-    `docs/exec-plans/active/${slugifyPrompt(task)}.md`,
-    options.baseBranch,
-  ),
-};
+  async attachRuntimeRoot(runtimeRoot: string): Promise<void> {
+    const resolvedRoot = resolveRuntimeRoot(process.cwd(), runtimeRoot);
+    await mkdir(`${resolvedRoot}/logs`, { recursive: true });
+    this.#logPath = `${resolvedRoot}/logs/ralph-loop.log`;
+    if (this.#buffer.length > 0) {
+      await Bun.write(this.#logPath, `${this.#buffer.join("\n")}\n`);
+      this.#buffer = [];
+    }
+  }
 
-console.log(JSON.stringify(output, null, 2));
+  async write(line: string): Promise<void> {
+    if (!this.#logPath) {
+      this.#buffer.push(line);
+      return;
+    }
+    await appendFile(this.#logPath, `${line}\n`);
+  }
+}
+
+async function main(): Promise<void> {
+  const options = parseArgs(Bun.argv.slice(2));
+  const task = await readTask(options);
+  const logger = new RalphLoopLogger();
+  const workBranch = options.workBranch ?? `ralph/${slugifyPrompt(task)}`;
+
+  const outcome = await runRalphLoop(
+    {
+      task,
+      repoRoot: process.cwd(),
+      model: options.model,
+      baseBranch: options.baseBranch,
+      maxIterations: options.maxIterations,
+      workBranch,
+      approvalPolicy: options.approvalPolicy,
+      sandbox: options.sandbox,
+      onRuntimeRoot: async (runtimeRoot) => logger.attachRuntimeRoot(runtimeRoot),
+      onProgress: (phase) => console.error(`[ralph-loop] ${phase}`),
+    },
+    async () =>
+      CodexAppServerClient.connect({
+        logLine: (line) => logger.write(line),
+      }),
+  );
+
+  console.log(
+    JSON.stringify(
+      {
+        model: options.model,
+        baseBranch: options.baseBranch,
+        workBranch: outcome.workBranch,
+        worktreePath: outcome.worktreePath,
+        runtimeRoot: outcome.runtimeRoot,
+        planFilePath: outcome.planFilePath,
+        iterations: outcome.iterations,
+        prAgentOutput: outcome.prAgentOutput,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+await main();

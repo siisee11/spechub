@@ -3,7 +3,13 @@ import { expect, test } from "bun:test";
 import { buildCodingPrompt } from "./lib/coding-loop.mts";
 import { buildPrPrompt } from "./lib/pr-agent.mts";
 import { buildSetupPrompt } from "./lib/setup-agent.mts";
-import { parseInitOutput, slugifyPrompt } from "./lib/worktree.mts";
+import {
+  extractInitOutputFromItems,
+  extractPlanFilePath,
+  parseInitOutput,
+  resolveRuntimeRoot,
+  slugifyPrompt,
+} from "./lib/worktree.mts";
 
 test("setup prompt includes branch inputs", () => {
   const prompt = buildSetupPrompt({
@@ -37,4 +43,21 @@ test("init output parser validates required fields", () => {
   );
   expect(parsed.worktree_id).toBe("spechub-123");
   expect(slugifyPrompt("Build PRD.md first")).toBe("build-prd-md-first");
+});
+
+test("worktree helpers extract init output and plan paths", () => {
+  const initOutput = extractInitOutputFromItems([
+    {
+      type: "commandExecution",
+      aggregatedOutput:
+        'noise {"worktree_id":"spechub-123","worktree_path":"/tmp/spechub","work_branch":"task","base_branch":"main","deps_installed":true,"build_verified":true,"runtime_root":".worktree/spechub-123"}',
+    },
+  ]);
+  expect(initOutput?.worktree_path).toBe("/tmp/spechub");
+  expect(extractPlanFilePath("Plan: docs/exec-plans/active/task.md", "/tmp/spechub")).toBe(
+    "/tmp/spechub/docs/exec-plans/active/task.md",
+  );
+  expect(resolveRuntimeRoot("/tmp/spechub", ".worktree/spechub-123")).toBe(
+    "/tmp/spechub/.worktree/spechub-123",
+  );
 });

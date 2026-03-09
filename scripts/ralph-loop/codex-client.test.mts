@@ -14,9 +14,23 @@ test("thread start request contains model and cwd", () => {
   const request = createThreadStartRequest("gpt-5.3-codex", "/tmp/repo");
   expect(request.params.model).toBe("gpt-5.3-codex");
   expect(request.params.cwd).toBe("/tmp/repo");
+  expect(request.params.serviceName).toBe("spechub_ralph_loop");
 });
 
 test("turn start request includes prompt text", () => {
-  const request = createTurnStartRequest("thr_123", "hello");
+  const request = createTurnStartRequest({
+    threadId: "thr_123",
+    prompt: "hello",
+    cwd: "/tmp/repo",
+    approvalPolicy: "never",
+    sandbox: "workspace-write",
+  });
   expect(request.params.threadId).toBe("thr_123");
+  expect(request.params.input).toEqual([{ type: "text", text: "hello" }]);
+  expect(request.params.cwd).toBe("/tmp/repo");
+  expect(request.params.sandboxPolicy).toEqual({
+    type: "workspaceWrite",
+    writableRoots: ["/tmp/repo"],
+    networkAccess: true,
+  });
 });
