@@ -15,7 +15,7 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 - [x] Milestone 3: Build website UX (homepage + spec listing + per-spec presentation + copyable install command) with clear SpecHub positioning copy.
 - [x] Milestone 4: Remove product-website ownership from `harnesscli` and preserve harness responsibilities only.
 - [x] Milestone 5: Add Wrangler config/deploy commands and document Cloudflare auth/env/setup, local run, build, and deploy workflow.
-- [ ] Milestone 6: Run repository checks relevant to touched surfaces and close with updated plan state.
+- [x] Milestone 6: Run repository checks relevant to touched surfaces and close with updated plan state.
 
 ## Current progress
 
@@ -43,6 +43,14 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 - Added repository-checked deployment commands (`cf:check`, `cf:project:create`, `cf:deploy`, `cf:deploy:preview`, `cf:build-and-deploy`) in `apps/web/package.json` with root-level wrappers in `package.json`.
 - Documented local run, build, Cloudflare auth/setup, env vars, and deploy workflow in `apps/web/README.md` (plus frontend doc pointer update in `docs/FRONTEND.md`).
 - Verified Milestone 5 with `npm run web:typecheck`, `npm run web:test` (100% statements/branches/functions/lines), and `npm run web:build`.
+- Ran final validation for touched surfaces:
+  - `npm run web:typecheck` ✅
+  - `npm run web:test` ✅ (100% statements/branches/functions/lines)
+  - `npm run web:build` ✅
+  - `cargo test --manifest-path harness/Cargo.toml` ✅
+  - `harness/target/release/harnesscli audit .` ✅
+- `make ci` currently fails on pre-existing lint warnings in `scripts/ralph-loop/lib/codex-client.mts` and `scripts/ralph-loop/lib/driver.mts` (line budget), which are outside this PRD scope and were already modified in the working tree before this execution loop.
+- Closed this plan and moved it to `docs/exec-plans/completed/`.
 
 ## Key decisions
 
@@ -52,8 +60,7 @@ A first-pass marketplace UI currently lives in the Rust `harnesscli` preview sur
 
 ## Remaining issues / open questions
 
-- Confirm the final Cloudflare target pattern (static assets via Workers Assets vs Pages-style flow through Wrangler) based on current repository deployment conventions.
-- Decide whether per-spec detail should be route-based pages or an in-page detail panel, balancing simplicity and maintainability.
+- None for this PRD scope.
 
 ## Links to related documents
 
