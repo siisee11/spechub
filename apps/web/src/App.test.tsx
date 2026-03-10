@@ -41,6 +41,9 @@ describe('App', () => {
 
     expect(screen.getAllByRole('heading', { name: 'Harness Spec' })).toHaveLength(2);
     expect(screen.getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
+    expect(screen.getAllByText('Source')).toHaveLength(2);
+    expect(screen.getByText('Origin')).toBeInTheDocument();
+    expect(screen.getAllByText('Synced date (UTC)')).toHaveLength(3);
     expect(screen.getAllByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).toHaveLength(2);
     expect(screen.getAllByText('2026-03-10T12:34:10Z')).toHaveLength(2);
 

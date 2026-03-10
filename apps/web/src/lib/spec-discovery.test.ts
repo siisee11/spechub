@@ -89,6 +89,59 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
       },
     ]);
   });
+
+  it('trims metadata string values and rejects empty metadata fields', async () => {
+    const repoRoot = await createTempRepo();
+
+    await mkdir(path.join(repoRoot, 'specs', 'trimmed-spec'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'specs', 'empty-metadata'), { recursive: true });
+
+    await writeFile(path.join(repoRoot, 'specs', 'trimmed-spec', 'SPEC.md'), '# Trimmed\n\nValid metadata.\n', 'utf8');
+    await writeFile(
+      path.join(repoRoot, 'specs', 'trimmed-spec', 'metadata.json'),
+      JSON.stringify(
+        {
+          source: '  https://github.com/openai/symphony  ',
+          synced_date: ' 2026-03-10T12:34:10Z ',
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+
+    await writeFile(path.join(repoRoot, 'specs', 'empty-metadata', 'SPEC.md'), '# Empty\n\nInvalid metadata.\n', 'utf8');
+    await writeFile(
+      path.join(repoRoot, 'specs', 'empty-metadata', 'metadata.json'),
+      JSON.stringify(
+        {
+          source: '   ',
+          synced_date: '2026-03-10T12:34:10Z',
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+
+    const files = (await loadSpecMarkdownFilesFromRepository(repoRoot)).sort((a, b) => a.path.localeCompare(b.path));
+
+    expect(files).toEqual([
+      {
+        path: 'specs/empty-metadata/SPEC.md',
+        content: '# Empty\n\nInvalid metadata.\n',
+        metadata: null,
+      },
+      {
+        path: 'specs/trimmed-spec/SPEC.md',
+        content: '# Trimmed\n\nValid metadata.\n',
+        metadata: {
+          source: 'https://github.com/openai/symphony',
+          syncedDate: '2026-03-10T12:34:10Z',
+        },
+      },
+    ]);
+  });
 });
 
 describe('loadSpecCatalogFromRepository', () => {

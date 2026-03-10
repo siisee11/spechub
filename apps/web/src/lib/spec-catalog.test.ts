@@ -129,4 +129,31 @@ describe('buildSpecCatalog', () => {
       },
     ]);
   });
+
+  it('defaults metadata to null when metadata is omitted in source files', () => {
+    const catalog = buildSpecCatalog(
+      [
+        {
+          path: 'specs/no-metadata/SPEC.md',
+          content: '# No Metadata\n\nDemo spec.',
+        },
+      ],
+      {
+        ownerRepo: 'openai/spechub',
+        ref: 'main',
+      },
+    );
+
+    expect(catalog).toEqual([
+      {
+        slug: 'no-metadata',
+        name: 'No Metadata',
+        description: 'Demo spec.',
+        specPath: 'specs/no-metadata',
+        installCommand:
+          'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "no-metadata"',
+        metadata: null,
+      },
+    ]);
+  });
 });
