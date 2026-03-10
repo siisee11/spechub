@@ -13,7 +13,7 @@ Copy the upstream `https://github.com/siisee11/harness.spec` repository into thi
 
 ## Milestones
 
-- [ ] Inspect `specs/` and define import shape (vendored snapshot vs git subtree/submodule style metadata-free copy).
+- [x] Inspect `specs/` and define import shape (vendored snapshot vs git subtree/submodule style metadata-free copy).
 - [ ] Copy `harness.spec` contents into `specs/` while preserving required files and excluding irrelevant git metadata.
 - [ ] Add or update tests/checks that validate expected imported structure/content.
 - [ ] Run repository validation commands for touched scope and fix any failures.
@@ -23,16 +23,18 @@ Copy the upstream `https://github.com/siisee11/harness.spec` repository into thi
 
 - Guardrails reviewed: `AGENTS.md`, `ARCHITECTURE.md`, `NON_NEGOTIABLE_RULES.md`.
 - Plan created and checked in under `docs/exec-plans/active/`.
+- Milestone 1 complete: inspected existing `specs/` conventions (`specs/create-harness`, `specs/symphony`) and upstream `siisee11/harness.spec` repository layout.
 
 ## Key decisions
 
 - Keep `AGENTS.md` as a map; put operational details in canonical docs/plans only.
 - Treat `.worktree/` runtime output as non-canonical and out of scope for this issue.
 - Continue work on current branch when harness init cannot complete branch/worktree setup in this environment.
+- Import method will be a vendored snapshot (plain checked-in files) under `specs/harness-spec/`, explicitly excluding upstream `.git` metadata.
+- Add `specs/harness-spec/UPSTREAM.md` during import to record repository URL, fetched reference, resolved commit, and file integrity hashes for reproducibility.
 
 ## Remaining issues / open questions
 
-- Exact import method is not explicitly specified; decide between plain copied tree and history-preserving strategy based on repository norms.
 - Identify the minimal automated tests/checks that satisfy "update tests for every code change" for this import-heavy task.
 
 ## Links to related documents
