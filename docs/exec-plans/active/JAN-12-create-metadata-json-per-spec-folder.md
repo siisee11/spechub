@@ -23,7 +23,7 @@ Implement per-spec metadata for vendored specs by adding `metadata.json` in each
 
 - [x] Create `metadata.json` in each remaining spec folder with correct `source` and current UTC `synced_date`.
 - [x] Remove `specs/create-harness/` and update any tests/fixtures that currently expect it.
-- [ ] Extend spec discovery/catalog logic to load and carry metadata fields.
+- [x] Extend spec discovery/catalog logic to load and carry metadata fields.
 - [ ] Render `source` and `synced_date` in the web UI detail/list views.
 - [ ] Add/update automated tests for discovery parsing, catalog mapping, and UI rendering of metadata.
 - [ ] Run targeted validation commands and fix failures.
@@ -45,6 +45,12 @@ Implement per-spec metadata for vendored specs by adding `metadata.json` in each
     - `apps/web/src/lib/spec-discovery.test.ts`
     - `apps/web/src/lib/spec-catalog.test.ts`
     - `apps/web/src/App.test.tsx`
+- Milestone 3 completed:
+  - Extended spec discovery to parse optional per-spec `metadata.json` and map `synced_date` -> `syncedDate`.
+  - Extended catalog mapping so each `SpecCatalogEntry` carries parsed metadata (`source`, `syncedDate`) when available.
+  - Updated/added metadata-focused tests in:
+    - `apps/web/src/lib/spec-discovery.test.ts`
+    - `apps/web/src/lib/spec-catalog.test.ts`
 
 ## Key decisions
 

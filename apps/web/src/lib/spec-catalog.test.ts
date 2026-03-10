@@ -83,14 +83,20 @@ describe('buildSpecCatalog', () => {
         {
           path: 'docs/not-a-spec.md',
           content: '# Ignore Me',
+          metadata: null,
         },
         {
           path: 'specs/zeta/SPEC.md',
           content: '# Zeta\n\nZeta description.',
+          metadata: null,
         },
         {
           path: 'specs/alpha/SPEC.md',
           content: '',
+          metadata: {
+            source: 'https://example.com/alpha',
+            syncedDate: '2026-03-10T12:34:10Z',
+          },
         },
       ],
       {
@@ -107,6 +113,10 @@ describe('buildSpecCatalog', () => {
         specPath: 'specs/alpha',
         installCommand:
           'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "alpha"',
+        metadata: {
+          source: 'https://example.com/alpha',
+          syncedDate: '2026-03-10T12:34:10Z',
+        },
       },
       {
         slug: 'zeta',
@@ -115,6 +125,7 @@ describe('buildSpecCatalog', () => {
         specPath: 'specs/zeta',
         installCommand:
           'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "zeta"',
+        metadata: null,
       },
     ]);
   });

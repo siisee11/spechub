@@ -8,6 +8,12 @@ export type RepoSource = {
 export type SpecMarkdownFile = {
   path: string;
   content: string;
+  metadata?: SpecMetadata | null;
+};
+
+export type SpecMetadata = {
+  source: string;
+  syncedDate: string;
 };
 
 export type SpecCatalogEntry = {
@@ -16,6 +22,7 @@ export type SpecCatalogEntry = {
   description: string;
   specPath: string;
   installCommand: string;
+  metadata?: SpecMetadata | null;
 };
 
 export function parseSpecMarkdown(slug: string, markdown: string): {
@@ -93,6 +100,7 @@ export function buildSpecCatalog(
         description: parsed.description,
         specPath: `specs/${slug}`,
         installCommand: buildInstallCommand(slug, repoSource),
+        metadata: file.metadata ?? null,
       } satisfies SpecCatalogEntry;
     })
     .filter((entry): entry is SpecCatalogEntry => entry !== null)

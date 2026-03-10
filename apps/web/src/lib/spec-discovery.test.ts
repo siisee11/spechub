@@ -37,12 +37,55 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
       'utf8',
     );
 
-    const files = await loadSpecMarkdownFilesFromRepository(repoRoot);
+    const files = (await loadSpecMarkdownFilesFromRepository(repoRoot)).sort((a, b) => a.path.localeCompare(b.path));
 
     expect(files).toEqual([
       {
         path: 'specs/harness-spec/SPEC.md',
         content: '# Harness Spec\n\nBuild systems.\n',
+        metadata: null,
+      },
+    ]);
+  });
+
+  it('loads metadata from metadata.json and ignores invalid metadata payloads', async () => {
+    const repoRoot = await createTempRepo();
+
+    await mkdir(path.join(repoRoot, 'specs', 'symphony'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'specs', 'broken-spec'), { recursive: true });
+
+    await writeFile(path.join(repoRoot, 'specs', 'symphony', 'SPEC.md'), '# Symphony\n\nAgent loop.\n', 'utf8');
+    await writeFile(
+      path.join(repoRoot, 'specs', 'symphony', 'metadata.json'),
+      JSON.stringify(
+        {
+          source: 'https://github.com/openai/symphony',
+          synced_date: '2026-03-10T12:34:10Z',
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+
+    await writeFile(path.join(repoRoot, 'specs', 'broken-spec', 'SPEC.md'), '# Broken\n\nBad metadata.\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'specs', 'broken-spec', 'metadata.json'), '{"source": 42}', 'utf8');
+
+    const files = (await loadSpecMarkdownFilesFromRepository(repoRoot)).sort((a, b) => a.path.localeCompare(b.path));
+
+    expect(files).toEqual([
+      {
+        path: 'specs/broken-spec/SPEC.md',
+        content: '# Broken\n\nBad metadata.\n',
+        metadata: null,
+      },
+      {
+        path: 'specs/symphony/SPEC.md',
+        content: '# Symphony\n\nAgent loop.\n',
+        metadata: {
+          source: 'https://github.com/openai/symphony',
+          syncedDate: '2026-03-10T12:34:10Z',
+        },
       },
     ]);
   });
@@ -56,6 +99,18 @@ describe('loadSpecCatalogFromRepository', () => {
     await mkdir(path.join(repoRoot, 'specs', 'a-spec'), { recursive: true });
     await writeFile(path.join(repoRoot, 'specs', 'z-spec', 'SPEC.md'), '# Z Spec\n\nZ summary.\n', 'utf8');
     await writeFile(path.join(repoRoot, 'specs', 'a-spec', 'SPEC.md'), '# A Spec\n\nA summary.\n', 'utf8');
+    await writeFile(
+      path.join(repoRoot, 'specs', 'a-spec', 'metadata.json'),
+      JSON.stringify(
+        {
+          source: 'https://github.com/example/a-spec',
+          synced_date: '2026-03-10T12:34:10Z',
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
 
     const catalog = await loadSpecCatalogFromRepository(repoRoot, {
       ownerRepo: 'openai/spechub',
@@ -66,5 +121,10 @@ describe('loadSpecCatalogFromRepository', () => {
     expect(catalog[0]?.installCommand).toBe(
       'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "a-spec"',
     );
+    expect(catalog[0]?.metadata).toEqual({
+      source: 'https://github.com/example/a-spec',
+      syncedDate: '2026-03-10T12:34:10Z',
+    });
+    expect(catalog[1]?.metadata).toBeNull();
   });
 });
