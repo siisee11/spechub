@@ -44,6 +44,7 @@ linear:
       Symphony started processing {{ issue.identifier }}.
       Attempt: {{ attempt }}
   completion:
+    state: In Review
     comment: |
       Symphony finished processing {{ issue.identifier }}.
       PR: {{ result.pr_url }}

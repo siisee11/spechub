@@ -61,6 +61,10 @@ test("config builder applies defaults, env indirection, and path normalization",
             state: "In Progress",
             comment: "Started {{ issue.identifier }}",
           },
+          completion: {
+            state: "In Review",
+            comment: "PR {{ result.pr_url }}",
+          },
         },
       },
       promptTemplate: "",
@@ -84,6 +88,10 @@ test("config builder applies defaults, env indirection, and path normalization",
     assignee: "viewer",
     state: "In Progress",
     comment: "Started {{ issue.identifier }}",
+  });
+  expect(config.linear.completion).toEqual({
+    state: "In Review",
+    comment: "PR {{ result.pr_url }}",
   });
   expect(validateDispatchConfig(config)).toEqual([]);
 });
