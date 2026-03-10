@@ -1,9 +1,52 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { buildSpecCatalog, type RepoSource, type SpecCatalogEntry, type SpecMarkdownFile } from './spec-catalog';
+import {
+  buildSpecCatalog,
+  type RepoSource,
+  type SpecCatalogEntry,
+  type SpecMarkdownFile,
+  type SpecMetadata,
+} from './spec-catalog';
 
 function toPosixPath(filePath: string): string {
   return filePath.replaceAll(path.sep, '/');
+}
+
+function parseSpecMetadata(rawMetadata: string): SpecMetadata | null {
+  try {
+    const parsed = JSON.parse(rawMetadata) as {
+      source?: unknown;
+      synced_date?: unknown;
+    };
+
+    if (typeof parsed.source !== 'string' || typeof parsed.synced_date !== 'string') {
+      return null;
+    }
+
+    const source = parsed.source.trim();
+    const syncedDate = parsed.synced_date.trim();
+    if (!source || !syncedDate) {
+      return null;
+    }
+
+    return {
+      source,
+      syncedDate,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function loadSpecMetadata(specRoot: string): Promise<SpecMetadata | null> {
+  const metadataPath = path.join(specRoot, 'metadata.json');
+
+  try {
+    const metadataContent = await readFile(metadataPath, 'utf8');
+    return parseSpecMetadata(metadataContent);
+  } catch {
+    return null;
+  }
 }
 
 export async function loadSpecMarkdownFilesFromRepository(repoRoot: string): Promise<SpecMarkdownFile[]> {
@@ -19,14 +62,16 @@ export async function loadSpecMarkdownFilesFromRepository(repoRoot: string): Pro
   const files = await Promise.all(
     entries
       .filter((entry) => entry.isDirectory())
-      .map(async (entry) => {
-        const specPath = path.join(specsRoot, entry.name, 'SPEC.md');
+      .map<Promise<SpecMarkdownFile | null>>(async (entry) => {
+        const specRoot = path.join(specsRoot, entry.name);
+        const specPath = path.join(specRoot, 'SPEC.md');
 
         try {
-          const content = await readFile(specPath, 'utf8');
+          const [content, metadata] = await Promise.all([readFile(specPath, 'utf8'), loadSpecMetadata(specRoot)]);
           return {
             path: toPosixPath(path.relative(repoRoot, specPath)),
             content,
+            metadata,
           } satisfies SpecMarkdownFile;
         } catch {
           return null;

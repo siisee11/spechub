@@ -11,12 +11,12 @@ import {
 describe('parseSpecMarkdown', () => {
   it('uses markdown heading and first non-heading summary line', () => {
     const parsed = parseSpecMarkdown(
-      'create-harness',
-      '# Create Harness\n\n## Summary\n`code`\nBuild a portable harness engineering system.\n',
+      'harness-spec',
+      '# Harness Spec\n\n## Summary\n`code`\nBuild a portable harness engineering system.\n',
     );
 
     expect(parsed).toEqual({
-      name: 'Create Harness',
+      name: 'Harness Spec',
       description: 'Build a portable harness engineering system.',
     });
   });
@@ -47,32 +47,32 @@ describe('parseGitHubOwnerRepo', () => {
 
 describe('extractSpecSlugFromPath', () => {
   it('extracts slug from POSIX and Windows-style paths', () => {
-    expect(extractSpecSlugFromPath('specs/create-harness/SPEC.md')).toBe('create-harness');
+    expect(extractSpecSlugFromPath('specs/harness-spec/SPEC.md')).toBe('harness-spec');
     expect(extractSpecSlugFromPath('specs\\demo-spec\\SPEC.md')).toBe('demo-spec');
   });
 
   it('returns null when the path does not point to a spec markdown file', () => {
-    expect(extractSpecSlugFromPath('specs/create-harness/README.md')).toBeNull();
+    expect(extractSpecSlugFromPath('specs/harness-spec/README.md')).toBeNull();
   });
 });
 
 describe('buildInstallCommand', () => {
   it('builds command from concrete repo source', () => {
-    const command = buildInstallCommand('create-harness', {
+    const command = buildInstallCommand('harness-spec', {
       ownerRepo: 'openai/spechub',
       ref: 'main',
     });
 
     expect(command).toBe(
-      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "create-harness"',
+      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "harness-spec"',
     );
   });
 
   it('builds placeholder command when repo source is unavailable', () => {
-    const command = buildInstallCommand('create-harness');
+    const command = buildInstallCommand('harness-spec');
 
     expect(command).toContain('REPO=owner/repo REF=main');
-    expect(command).toContain('"create-harness"');
+    expect(command).toContain('"harness-spec"');
   });
 });
 
@@ -83,14 +83,20 @@ describe('buildSpecCatalog', () => {
         {
           path: 'docs/not-a-spec.md',
           content: '# Ignore Me',
+          metadata: null,
         },
         {
           path: 'specs/zeta/SPEC.md',
           content: '# Zeta\n\nZeta description.',
+          metadata: null,
         },
         {
           path: 'specs/alpha/SPEC.md',
           content: '',
+          metadata: {
+            source: 'https://example.com/alpha',
+            syncedDate: '2026-03-10T12:34:10Z',
+          },
         },
       ],
       {
@@ -107,6 +113,10 @@ describe('buildSpecCatalog', () => {
         specPath: 'specs/alpha',
         installCommand:
           'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "alpha"',
+        metadata: {
+          source: 'https://example.com/alpha',
+          syncedDate: '2026-03-10T12:34:10Z',
+        },
       },
       {
         slug: 'zeta',
@@ -115,6 +125,34 @@ describe('buildSpecCatalog', () => {
         specPath: 'specs/zeta',
         installCommand:
           'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "zeta"',
+        metadata: null,
+      },
+    ]);
+  });
+
+  it('defaults metadata to null when metadata is omitted in source files', () => {
+    const catalog = buildSpecCatalog(
+      [
+        {
+          path: 'specs/no-metadata/SPEC.md',
+          content: '# No Metadata\n\nDemo spec.',
+        },
+      ],
+      {
+        ownerRepo: 'openai/spechub',
+        ref: 'main',
+      },
+    );
+
+    expect(catalog).toEqual([
+      {
+        slug: 'no-metadata',
+        name: 'No Metadata',
+        description: 'Demo spec.',
+        specPath: 'specs/no-metadata',
+        installCommand:
+          'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "no-metadata"',
+        metadata: null,
       },
     ]);
   });

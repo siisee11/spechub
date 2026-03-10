@@ -45,6 +45,26 @@ export default function App({
                     <h2>{spec.name}</h2>
                     <p className="description">{spec.description}</p>
                     <p className="spec-path">{spec.specPath}</p>
+                    <dl className="metadata-list">
+                      <div>
+                        <dt>Source</dt>
+                        <dd>
+                          {spec.metadata ? (
+                            <a href={spec.metadata.source} target="_blank" rel="noreferrer">
+                              {spec.metadata.source}
+                            </a>
+                          ) : (
+                            <span>Unknown</span>
+                          )}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Synced date (UTC)</dt>
+                        <dd>
+                          <code>{spec.metadata?.syncedDate ?? 'Unknown'}</code>
+                        </dd>
+                      </div>
+                    </dl>
                     <pre className="install-command">{spec.installCommand}</pre>
                     <div className="actions">
                       <button
@@ -77,6 +97,26 @@ export default function App({
                 <p>
                   Source: <code>{detailSpec.specPath}</code>
                 </p>
+                <dl className="metadata-list metadata-list-detail">
+                  <div>
+                    <dt>Origin</dt>
+                    <dd>
+                      {detailSpec.metadata ? (
+                        <a href={detailSpec.metadata.source} target="_blank" rel="noreferrer">
+                          {detailSpec.metadata.source}
+                        </a>
+                      ) : (
+                        <span>Unknown</span>
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Synced date (UTC)</dt>
+                    <dd>
+                      <code>{detailSpec.metadata?.syncedDate ?? 'Unknown'}</code>
+                    </dd>
+                  </div>
+                </dl>
                 <p>
                   Install commands copy the full <code>{detailSpec.specPath}</code> directory, not just <code>SPEC.md</code>.
                 </p>

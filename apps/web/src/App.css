@@ -67,6 +67,44 @@
   font-size: 0.85rem;
 }
 
+.metadata-list {
+  margin: 0.5rem 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.metadata-list div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.metadata-list dt {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4b4b4b;
+}
+
+.metadata-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
+}
+
+.metadata-list code {
+  font-family: "IBM Plex Mono", "SF Mono", monospace;
+  font-size: 0.8rem;
+}
+
+.metadata-list a {
+  color: #11387a;
+}
+
+.metadata-list-detail {
+  margin-top: 0.75rem;
+}
+
 .install-command {
   margin: 0.5rem 0;
   padding: 0.65rem;
