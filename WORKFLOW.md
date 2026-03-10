@@ -35,6 +35,22 @@ codex:
   turn_timeout_ms: 3600000
   read_timeout_ms: 5000
   stall_timeout_ms: 300000
+
+linear:
+  dispatch:
+    assignee: viewer
+    state: In Progress
+    comment: |
+      Symphony started processing {{ issue.identifier }}.
+      Attempt: {{ attempt }}
+  completion:
+    comment: |
+      Symphony finished processing {{ issue.identifier }}.
+      PR: {{ result.pr_url }}
+  failure:
+    comment: |
+      Symphony failed while processing {{ issue.identifier }}.
+      Error: {{ error }}
 ---
 You are working a Linear issue in an automated Symphony + Ralph loop.
 

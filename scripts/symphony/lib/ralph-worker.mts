@@ -72,7 +72,7 @@ export function createRalphWorker(options: {
           message: "before_run_hook",
         });
         await workspaceManager.runHook("before_run", workspace.path, true);
-        await runLoop(
+        const outcome = await runLoop(
           {
             task: prompt,
             repoRoot: workspace.path,
@@ -107,6 +107,8 @@ export function createRalphWorker(options: {
         );
         return {
           status: "completed" as const,
+          prUrl: extractPullRequestUrl(outcome.prAgentOutput),
+          prAgentOutput: outcome.prAgentOutput,
         };
       } catch (error) {
         if (abortController.signal.aborted) {
@@ -266,4 +268,9 @@ function integerValue(value: unknown): number | null {
 
 function abortReason(reason: unknown): string {
   return typeof reason === "string" && reason ? reason : "cancelled";
+}
+
+function extractPullRequestUrl(text: string): string | null {
+  const match = text.match(/https:\/\/github\.com\/\S+\/pull\/\d+/);
+  return match?.[0] ?? null;
 }

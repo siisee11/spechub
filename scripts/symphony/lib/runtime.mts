@@ -18,6 +18,8 @@ export type WorkerEvent = {
 export type WorkerResult = {
   status: "completed" | "failed" | "cancelled";
   error?: string;
+  prUrl?: string | null;
+  prAgentOutput?: string | null;
 };
 
 export type WorkerController = {
@@ -36,6 +38,26 @@ export type IssueTracker = {
   fetchCandidateIssues: () => Promise<NormalizedIssue[]>;
   fetchIssuesByStates: (states: string[]) => Promise<NormalizedIssue[]>;
   fetchIssueStatesByIds: (ids: string[]) => Promise<NormalizedIssue[]>;
+};
+
+export type IssueLifecycleWriter = {
+  onDispatch?: (options: {
+    issue: NormalizedIssue;
+    attempt: number | null;
+    config: SymphonyConfig;
+  }) => Promise<void>;
+  onCompleted?: (options: {
+    issue: NormalizedIssue;
+    attempt: number | null;
+    config: SymphonyConfig;
+    result: WorkerResult;
+  }) => Promise<void>;
+  onFailed?: (options: {
+    issue: NormalizedIssue;
+    attempt: number | null;
+    config: SymphonyConfig;
+    result: WorkerResult;
+  }) => Promise<void>;
 };
 
 export type Snapshot = {

@@ -47,6 +47,21 @@ export type SymphonyConfig = {
   server: {
     port?: number;
   };
+  linear: {
+    dispatch?: {
+      assignee?: string;
+      state?: string;
+      comment?: string;
+    };
+    completion?: {
+      state?: string;
+      comment?: string;
+    };
+    failure?: {
+      state?: string;
+      comment?: string;
+    };
+  };
 };
 
 export function normalizeStateName(state: string): string {
@@ -71,6 +86,7 @@ export function buildSymphonyConfig(
   const agent = objectValue(workflow.config.agent);
   const codex = objectValue(workflow.config.codex);
   const server = objectValue(workflow.config.server);
+  const linear = objectValue(workflow.config.linear);
 
   const activeStates = coerceStringList(tracker.active_states, ["Todo", "In Progress"]);
   const terminalStates = coerceStringList(tracker.terminal_states, [
@@ -129,6 +145,11 @@ export function buildSymphonyConfig(
     },
     server: {
       port: optionalInteger(server.port),
+    },
+    linear: {
+      dispatch: coerceLinearAction(objectValue(linear.dispatch), env),
+      completion: coerceLinearAction(objectValue(linear.completion), env),
+      failure: coerceLinearAction(objectValue(linear.failure), env),
     },
   };
 }
@@ -214,6 +235,23 @@ function coerceSandboxPolicy(value: unknown): { type: string } {
     return { type: value.type.trim() };
   }
   return { type: "workspace-write" };
+}
+
+function coerceLinearAction(
+  value: Record<string, unknown>,
+  env: Record<string, string | undefined>,
+): { assignee?: string; state?: string; comment?: string } | undefined {
+  const assignee = resolveEnvValue(stringValue(value.assignee), env);
+  const state = stringValue(value.state);
+  const comment = optionalString(value.comment);
+  if (!assignee && !state && !comment) {
+    return undefined;
+  }
+  return {
+    assignee: assignee || undefined,
+    state: state || undefined,
+    comment,
+  };
 }
 
 function objectValue(value: unknown): Record<string, unknown> {

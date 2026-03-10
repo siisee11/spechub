@@ -1,7 +1,14 @@
 import type { SymphonyConfig } from "./config.mts";
 import { normalizeStateName, validateDispatchConfig } from "./config.mts";
 import type { NormalizedIssue } from "./linear.mts";
-import type { IssueTracker, Snapshot, WorkerController, WorkerEvent, WorkerFactory } from "./runtime.mts";
+import type {
+  IssueLifecycleWriter,
+  IssueTracker,
+  Snapshot,
+  WorkerController,
+  WorkerEvent,
+  WorkerFactory,
+} from "./runtime.mts";
 
 type RetryEntry = {
   issueId: string;
@@ -45,6 +52,7 @@ export class SymphonyOrchestrator {
   #getConfig: () => SymphonyConfig;
   #tracker: IssueTracker;
   #workerFactory: WorkerFactory;
+  #lifecycleWriter?: IssueLifecycleWriter;
   #workspaceRemover: (issueIdentifier: string) => Promise<void>;
   #scheduler: Scheduler;
   #now: () => number;
@@ -70,6 +78,7 @@ export class SymphonyOrchestrator {
     getConfig: () => SymphonyConfig;
     tracker: IssueTracker;
     workerFactory: WorkerFactory;
+    lifecycleWriter?: IssueLifecycleWriter;
     workspaceRemover: (issueIdentifier: string) => Promise<void>;
     scheduler?: Scheduler;
     now?: () => number;
@@ -78,6 +87,7 @@ export class SymphonyOrchestrator {
     this.#getConfig = options.getConfig;
     this.#tracker = options.tracker;
     this.#workerFactory = options.workerFactory;
+    this.#lifecycleWriter = options.lifecycleWriter;
     this.#workspaceRemover = options.workspaceRemover;
     this.#scheduler = options.scheduler ?? {
       setTimeout: (fn, delayMs) => setTimeout(fn, delayMs),
@@ -271,6 +281,11 @@ export class SymphonyOrchestrator {
     this.#info(
       `action=dispatch outcome=running issue_id=${quote(issue.id)} issue_identifier=${quote(issue.identifier)} running=${this.state.running.size}`,
     );
+    void this.#runLifecycleWrite("dispatch", {
+      issue,
+      attempt,
+      config,
+    });
 
     void controller.result.then(
       (result) => this.#handleWorkerExit(issue.id, result),
@@ -493,6 +508,12 @@ export class SymphonyOrchestrator {
 
     if (result.status === "completed") {
       this.state.completed.add(issueId);
+      await this.#runLifecycleWrite("completed", {
+        issue: entry.issue,
+        attempt: entry.retryAttempt,
+        config: this.#getConfig(),
+        result,
+      });
       this.#info(
         `action=worker_exit outcome=completed issue_id=${quote(issueId)} issue_identifier=${quote(entry.issue.identifier)} turns=${entry.turnCount}`,
       );
@@ -503,6 +524,12 @@ export class SymphonyOrchestrator {
       return;
     }
 
+    await this.#runLifecycleWrite("failed", {
+      issue: entry.issue,
+      attempt: entry.retryAttempt,
+      config: this.#getConfig(),
+      result,
+    });
     this.#warn(
       `action=worker_exit outcome=retrying issue_id=${quote(issueId)} issue_identifier=${quote(entry.issue.identifier)} reason=${quote(result.error ?? "worker failed")}`,
     );
@@ -522,6 +549,40 @@ export class SymphonyOrchestrator {
 
   #error(fields: string): void {
     this.#log(`level=error ${fields}`);
+  }
+
+  async #runLifecycleWrite(
+    phase: "dispatch" | "completed" | "failed",
+    context:
+      | {
+          issue: NormalizedIssue;
+          attempt: number | null;
+          config: SymphonyConfig;
+        }
+      | {
+          issue: NormalizedIssue;
+          attempt: number | null;
+          config: SymphonyConfig;
+          result: { status: string; error?: string; prUrl?: string | null; prAgentOutput?: string | null };
+        },
+  ): Promise<void> {
+    try {
+      if (phase === "dispatch") {
+        await this.#lifecycleWriter?.onDispatch?.(context);
+        return;
+      }
+      if (phase === "completed" && "result" in context) {
+        await this.#lifecycleWriter?.onCompleted?.(context);
+        return;
+      }
+      if (phase === "failed" && "result" in context) {
+        await this.#lifecycleWriter?.onFailed?.(context);
+      }
+    } catch (error) {
+      this.#warn(
+        `action=tracker_write outcome=failed phase=${quote(phase)} issue_id=${quote(context.issue.id)} issue_identifier=${quote(context.issue.identifier)} error=${quote(formatError(error))}`,
+      );
+    }
   }
 }
 

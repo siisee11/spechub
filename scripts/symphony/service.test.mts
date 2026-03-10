@@ -36,6 +36,7 @@ function createConfig(): SymphonyConfig {
       stallTimeoutMs: 1000,
     },
     server: {},
+    linear: {},
   };
 }
 

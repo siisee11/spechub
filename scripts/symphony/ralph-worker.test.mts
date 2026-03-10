@@ -35,6 +35,7 @@ const config: SymphonyConfig = {
     stallTimeoutMs: 1000,
   },
   server: {},
+  linear: {},
 };
 
 test("ralph worker renders prompt, runs hooks, and supports cancellation", async () => {
@@ -82,6 +83,7 @@ test("ralph worker renders prompt, runs hooks, and supports cancellation", async
       description: null,
       priority: 1,
       state: "Todo",
+      team_id: "team-1",
       branch_name: null,
       url: null,
       labels: [],
@@ -100,6 +102,57 @@ test("ralph worker renders prompt, runs hooks, and supports cancellation", async
   expect(phases).toContain("after_run");
   expect(phases.some((phase) => phase.includes("Issue ABC-1 attempt 2"))).toBe(true);
   expect(result.status).toBe("cancelled");
+});
+
+test("ralph worker returns pull request metadata on completion", async () => {
+  const worker = createRalphWorker({
+    getWorkspaceManager: () =>
+      ({
+        ensureWorkspace: async () => ({
+          path: "/tmp/workspace",
+          workspaceKey: "ABC-2",
+          createdNow: true,
+        }),
+        runHook: async () => {},
+      }) as never,
+    model: "gpt-5.3-codex",
+    baseBranch: "main",
+    runLoop: async () => ({
+      workBranch: "branch",
+      worktreePath: "/tmp/workspace",
+      runtimeRoot: "/tmp/workspace/.worktree",
+      planFilePath: "/tmp/workspace/docs/exec-plans/active/task.md",
+      prAgentOutput: "Opened https://github.com/acme/repo/pull/42",
+      iterations: 1,
+    }),
+  });
+
+  const result = await worker({
+    issue: {
+      id: "2",
+      identifier: "ABC-2",
+      title: "Issue",
+      description: null,
+      priority: 1,
+      state: "Todo",
+      team_id: "team-1",
+      branch_name: null,
+      url: null,
+      labels: [],
+      blocked_by: [],
+      created_at: null,
+      updated_at: null,
+    },
+    attempt: null,
+    config,
+    onEvent: () => {},
+  }).result;
+
+  expect(result).toEqual({
+    status: "completed",
+    prUrl: "https://github.com/acme/repo/pull/42",
+    prAgentOutput: "Opened https://github.com/acme/repo/pull/42",
+  });
 });
 
 test("ralph session wrapper maps runTurn results and raw notifications", async () => {

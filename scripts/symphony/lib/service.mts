@@ -1,6 +1,7 @@
 import type { SymphonyConfig } from "./config.mts";
 import { buildSymphonyConfig } from "./config.mts";
 import { createLinearTracker } from "./linear.mts";
+import { createLinearLifecycleWriter } from "./linear-writer.mts";
 import { SymphonyOrchestrator } from "./orchestrator.mts";
 import { createRalphWorker } from "./ralph-worker.mts";
 import { loadWorkflowDefinition, watchWorkflow, type WorkflowDefinition } from "./workflow.mts";
@@ -48,35 +49,33 @@ export class SymphonyService {
             workspaceRoot: currentConfig.workspace.root,
             hooks: currentConfig.hooks,
           });
+        const createTrackerClient = () =>
+          createLinearTracker({
+            endpoint: this.#currentConfig.tracker.endpoint,
+            apiKey: this.#currentConfig.tracker.apiKey,
+            projectSlug: this.#currentConfig.tracker.projectSlug,
+            activeStates: this.#currentConfig.tracker.activeStates,
+            terminalStates: this.#currentConfig.tracker.terminalStates,
+          });
         const tracker = {
           fetchCandidateIssues: async () =>
-            createLinearTracker({
-              endpoint: this.#currentConfig.tracker.endpoint,
-              apiKey: this.#currentConfig.tracker.apiKey,
-              projectSlug: this.#currentConfig.tracker.projectSlug,
-              activeStates: this.#currentConfig.tracker.activeStates,
-              terminalStates: this.#currentConfig.tracker.terminalStates,
-            }).fetchCandidateIssues(),
+            createTrackerClient().fetchCandidateIssues(),
           fetchIssuesByStates: async (states: string[]) =>
-            createLinearTracker({
-              endpoint: this.#currentConfig.tracker.endpoint,
-              apiKey: this.#currentConfig.tracker.apiKey,
-              projectSlug: this.#currentConfig.tracker.projectSlug,
-              activeStates: this.#currentConfig.tracker.activeStates,
-              terminalStates: this.#currentConfig.tracker.terminalStates,
-            }).fetchIssuesByStates(states),
+            createTrackerClient().fetchIssuesByStates(states),
           fetchIssueStatesByIds: async (ids: string[]) =>
-            createLinearTracker({
-              endpoint: this.#currentConfig.tracker.endpoint,
-              apiKey: this.#currentConfig.tracker.apiKey,
-              projectSlug: this.#currentConfig.tracker.projectSlug,
-              activeStates: this.#currentConfig.tracker.activeStates,
-              terminalStates: this.#currentConfig.tracker.terminalStates,
-            }).fetchIssueStatesByIds(ids),
+            createTrackerClient().fetchIssueStatesByIds(ids),
+          updateIssue: async (options: { issueId: string; stateId?: string; assigneeId?: string }) =>
+            createTrackerClient().updateIssue(options),
+          createComment: async (options: { issueId: string; body: string }) =>
+            createTrackerClient().createComment(options),
+          getViewer: async () => createTrackerClient().getViewer(),
+          resolveWorkflowStateId: async (options: { teamId: string; stateName: string }) =>
+            createTrackerClient().resolveWorkflowStateId(options),
         };
         return new SymphonyOrchestrator({
           getConfig: () => this.#currentConfig,
           tracker,
+          lifecycleWriter: createLinearLifecycleWriter(tracker),
           workerFactory: createRalphWorker({
             getWorkspaceManager,
             model: this.#model,

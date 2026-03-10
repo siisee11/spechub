@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import type { SymphonyConfig } from "./lib/config.mts";
 import type { NormalizedIssue } from "./lib/linear.mts";
 import { SymphonyOrchestrator, shouldDispatchIssue, sortIssuesForDispatch } from "./lib/orchestrator.mts";
-import type { WorkerController, WorkerFactory } from "./lib/runtime.mts";
+import type { IssueLifecycleWriter, WorkerController, WorkerFactory } from "./lib/runtime.mts";
 
 function createConfig(): SymphonyConfig {
   return {
@@ -38,6 +38,7 @@ function createConfig(): SymphonyConfig {
       stallTimeoutMs: 1000,
     },
     server: {},
+    linear: {},
   };
 }
 
@@ -49,6 +50,7 @@ function createIssue(overrides?: Partial<NormalizedIssue>): NormalizedIssue {
     description: null,
     priority: 2,
     state: "Todo",
+    team_id: "team-1",
     branch_name: null,
     url: null,
     labels: [],
@@ -57,6 +59,11 @@ function createIssue(overrides?: Partial<NormalizedIssue>): NormalizedIssue {
     updated_at: null,
     ...overrides,
   };
+}
+
+async function settle(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
 }
 
 function createScheduler() {
@@ -103,6 +110,7 @@ test("orchestrator schedules retries for completed, failed, stalled, and termina
   const scheduler = createScheduler();
   const cancellations: string[] = [];
   const removed: string[] = [];
+  const lifecycleEvents: string[] = [];
   const controllers = new Map<string, { controller: WorkerController; emit: (status: "completed" | "failed" | "cancelled") => void }>();
   const workerFactory: WorkerFactory = ({ issue, onEvent }) => {
     let resolve!: (value: { status: "completed" | "failed" | "cancelled"; error?: string }) => void;
@@ -129,6 +137,17 @@ test("orchestrator schedules retries for completed, failed, stalled, and termina
     });
     return controller;
   };
+  const lifecycleWriter: IssueLifecycleWriter = {
+    onDispatch: async ({ issue }) => {
+      lifecycleEvents.push(`dispatch:${issue.identifier}`);
+    },
+    onCompleted: async ({ issue }) => {
+      lifecycleEvents.push(`completed:${issue.identifier}`);
+    },
+    onFailed: async ({ issue }) => {
+      lifecycleEvents.push(`failed:${issue.identifier}`);
+    },
+  };
 
   const orchestrator = new SymphonyOrchestrator({
     getConfig: () => config,
@@ -139,6 +158,7 @@ test("orchestrator schedules retries for completed, failed, stalled, and termina
         ids.includes("3") ? [createIssue({ id: "3", identifier: "ABC-3", state: "Done" })] : [],
     },
     workerFactory,
+    lifecycleWriter,
     workspaceRemover: async (identifier) => {
       removed.push(identifier);
     },
@@ -151,13 +171,13 @@ test("orchestrator schedules retries for completed, failed, stalled, and termina
 
   orchestrator.dispatchIssue(createIssue(), null, config);
   controllers.get("1")?.emit("completed");
-  await Promise.resolve();
+  await settle();
   const completionRetry = orchestrator.state.retryAttempts.get("1");
   expect(completionRetry?.attempt).toBe(1);
 
   orchestrator.dispatchIssue(createIssue({ id: "2", identifier: "ABC-2" }), 1, config);
   controllers.get("2")?.emit("failed");
-  await Promise.resolve();
+  await settle();
   expect(orchestrator.state.retryAttempts.get("2")?.attempt).toBe(2);
 
   orchestrator.dispatchIssue(createIssue({ id: "3", identifier: "ABC-3", state: "In Progress" }), null, config);
@@ -165,9 +185,16 @@ test("orchestrator schedules retries for completed, failed, stalled, and termina
     ...config,
     codex: { ...config.codex, stallTimeoutMs: 0 },
   });
-  await Promise.resolve();
+  await settle();
   expect(cancellations).toContain("terminal");
   expect(removed).toEqual(["ABC-3"]);
+  expect(lifecycleEvents).toEqual([
+    "dispatch:ABC-1",
+    "completed:ABC-1",
+    "dispatch:ABC-2",
+    "failed:ABC-2",
+    "dispatch:ABC-3",
+  ]);
 
   let nowMs = 0;
   const stallOrchestrator = new SymphonyOrchestrator({
@@ -185,7 +212,7 @@ test("orchestrator schedules retries for completed, failed, stalled, and termina
   stallOrchestrator.dispatchIssue(createIssue({ id: "4", identifier: "ABC-4", state: "In Progress" }), null, config);
   nowMs = 5000;
   await stallOrchestrator.reconcileRunningIssues(config);
-  await Promise.resolve();
+  await settle();
   expect(cancellations).toContain("stalled");
 });
 
@@ -271,7 +298,7 @@ test("orchestrator emits terminal logs for tick, dispatch, worker events, and re
   await loggingOrchestrator.tick();
   emitEvent();
   resolveRun({ status: "completed" });
-  await Promise.resolve();
+  await settle();
 
   expect(logs.some((line) => line.includes("action=tick outcome=begin"))).toBe(true);
   expect(logs.some((line) => line.includes("action=dispatch outcome=running"))).toBe(true);

@@ -55,6 +55,13 @@ test("config builder applies defaults, env indirection, and path normalization",
             Broken: "0",
           },
         },
+        linear: {
+          dispatch: {
+            assignee: "viewer",
+            state: "In Progress",
+            comment: "Started {{ issue.identifier }}",
+          },
+        },
       },
       promptTemplate: "",
     },
@@ -72,6 +79,11 @@ test("config builder applies defaults, env indirection, and path normalization",
   expect(config.workspace.root).toBe("/Users/dev/workspaces");
   expect(config.agent.maxConcurrentAgentsByState).toEqual({
     "in progress": 2,
+  });
+  expect(config.linear.dispatch).toEqual({
+    assignee: "viewer",
+    state: "In Progress",
+    comment: "Started {{ issue.identifier }}",
   });
   expect(validateDispatchConfig(config)).toEqual([]);
 });

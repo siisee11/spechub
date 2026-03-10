@@ -11,6 +11,7 @@ export type NormalizedIssue = {
   description: string | null;
   priority: number | null;
   state: string;
+  team_id: string | null;
   branch_name: string | null;
   url: string | null;
   labels: string[];
@@ -37,6 +38,7 @@ export function normalizeLinearIssue(node: Record<string, unknown>): NormalizedI
     description: nullableString(node.description),
     priority: integerOrNull(node.priority),
     state: extractStateName(node.state),
+    team_id: nullableString(objectValue(node.team).id),
     branch_name: nullableString(node.branchName ?? node.branch_name),
     url: nullableString(node.url),
     labels: extractLabels(node).map((label) => label.toLowerCase()),
@@ -57,8 +59,18 @@ export function createLinearTracker(options: {
   fetchCandidateIssues: () => Promise<NormalizedIssue[]>;
   fetchIssuesByStates: (states: string[]) => Promise<NormalizedIssue[]>;
   fetchIssueStatesByIds: (ids: string[]) => Promise<NormalizedIssue[]>;
+  updateIssue: (options: {
+    issueId: string;
+    stateId?: string;
+    assigneeId?: string;
+  }) => Promise<void>;
+  createComment: (options: { issueId: string; body: string }) => Promise<void>;
+  getViewer: () => Promise<{ id: string; name: string | null; email: string | null }>;
+  resolveWorkflowStateId: (options: { teamId: string; stateName: string }) => Promise<string | null>;
 } {
   const fetchImpl = options.fetchImpl ?? fetch;
+  const stateIdCache = new Map<string, string | null>();
+  let viewerPromise: Promise<{ id: string; name: string | null; email: string | null }> | undefined;
 
   return {
     fetchCandidateIssues: async () => {
@@ -113,6 +125,76 @@ export function createLinearTracker(options: {
       });
       const nodes = arrayValue(objectValue(payload.data).issues?.nodes);
       return nodes.map((node) => normalizeLinearIssue(objectValue(node)));
+    },
+    updateIssue: async ({ issueId, stateId, assigneeId }) => {
+      if (!stateId && !assigneeId) {
+        return;
+      }
+      await requestGraphql(fetchImpl, options.endpoint, options.apiKey, {
+        query: ISSUE_UPDATE_MUTATION,
+        variables: {
+          id: issueId,
+          input: {
+            ...(stateId ? { stateId } : {}),
+            ...(assigneeId ? { assigneeId } : {}),
+          },
+        },
+      });
+    },
+    createComment: async ({ issueId, body }) => {
+      if (!body.trim()) {
+        return;
+      }
+      await requestGraphql(fetchImpl, options.endpoint, options.apiKey, {
+        query: COMMENT_CREATE_MUTATION,
+        variables: {
+          input: {
+            issueId,
+            body,
+          },
+        },
+      });
+    },
+    getViewer: async () => {
+      viewerPromise ??= (async () => {
+        const payload = await requestGraphql(fetchImpl, options.endpoint, options.apiKey, {
+          query: VIEWER_QUERY,
+          variables: {},
+        });
+        const viewer = objectValue(objectValue(payload.data).viewer);
+        const id = stringOrEmpty(viewer.id);
+        if (!id) {
+          throw new TrackerError("linear_unknown_payload", "viewer payload missing id");
+        }
+        return {
+          id,
+          name: nullableString(viewer.name),
+          email: nullableString(viewer.email),
+        };
+      })();
+      return viewerPromise;
+    },
+    resolveWorkflowStateId: async ({ teamId, stateName }) => {
+      const cacheKey = `${teamId}:${stateName.trim().toLowerCase()}`;
+      if (stateIdCache.has(cacheKey)) {
+        return stateIdCache.get(cacheKey) ?? null;
+      }
+      const payload = await requestGraphql(fetchImpl, options.endpoint, options.apiKey, {
+        query: WORKFLOW_STATES_QUERY,
+        variables: {},
+      });
+      const nodes = arrayValue(objectValue(objectValue(payload.data).workflowStates).nodes);
+      const match =
+        nodes
+          .map((node) => objectValue(node))
+          .find(
+            (node) =>
+              nullableString(objectValue(node.team).id) === teamId &&
+              extractStateName(node).toLowerCase() === stateName.trim().toLowerCase(),
+          ) ?? null;
+      const stateId = match ? stringOrEmpty(match.id) || null : null;
+      stateIdCache.set(cacheKey, stateId);
+      return stateId;
     },
   };
 }
@@ -244,6 +326,7 @@ query CandidateIssues($projectSlug: String!, $states: [String!], $cursor: String
       url
       createdAt
       updatedAt
+      team { id }
       state { name }
       labels { nodes { name } }
       inverseRelations {
@@ -277,6 +360,7 @@ query IssuesByStates($projectSlug: String!, $states: [String!]) {
       id
       identifier
       title
+      team { id }
       state { name }
     }
     pageInfo {
@@ -294,9 +378,50 @@ query IssueStatesByIds($ids: [ID!]) {
       id
       identifier
       title
+      team { id }
       state { name }
       priority
       updatedAt
+    }
+  }
+}
+`;
+
+const ISSUE_UPDATE_MUTATION = `
+mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) {
+  issueUpdate(id: $id, input: $input) {
+    success
+  }
+}
+`;
+
+const COMMENT_CREATE_MUTATION = `
+mutation CommentCreate($input: CommentCreateInput!) {
+  commentCreate(input: $input) {
+    success
+  }
+}
+`;
+
+const VIEWER_QUERY = `
+query Viewer {
+  viewer {
+    id
+    name
+    email
+  }
+}
+`;
+
+const WORKFLOW_STATES_QUERY = `
+query WorkflowStates {
+  workflowStates {
+    nodes {
+      id
+      name
+      team {
+        id
+      }
     }
   }
 }
