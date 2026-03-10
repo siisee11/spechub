@@ -4,8 +4,10 @@
   "type": "module",
   "scripts": {
     "ralph-loop": "bun run scripts/ralph-loop/ralph-loop.mts",
+    "symphony": "bun run scripts/symphony/symphony.mts",
     "test:ralph-loop": "bun test scripts/ralph-loop",
-    "lint:scripts": "bun test scripts/ralph-loop",
+    "test:symphony": "bun test scripts/symphony",
+    "lint:scripts": "bun test scripts/ralph-loop scripts/symphony",
     "web:install": "npm --prefix apps/web ci",
     "web:dev": "npm --prefix apps/web run dev",
     "web:build": "npm --prefix apps/web run build",
