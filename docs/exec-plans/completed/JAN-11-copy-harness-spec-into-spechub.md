@@ -17,7 +17,7 @@ Copy the upstream `https://github.com/siisee11/harness.spec` repository into thi
 - [x] Copy `harness.spec` contents into `specs/` while preserving required files and excluding irrelevant git metadata.
 - [x] Add or update tests/checks that validate expected imported structure/content.
 - [x] Run repository validation commands for touched scope and fix any failures.
-- [ ] Prepare issue handoff notes and move plan state forward.
+- [x] Prepare issue handoff notes and move plan state forward.
 
 ## Current progress
 
@@ -31,6 +31,7 @@ Copy the upstream `https://github.com/siisee11/harness.spec` repository into thi
   - `bun test scripts/install-spec.test.mts`
   - `npm_config_cache=/tmp/jan11-npm-cache npm --prefix apps/web ci`
   - `npm_config_cache=/tmp/jan11-npm-cache npm --prefix apps/web exec -- vitest run src/lib/spec-discovery.test.ts --coverage=false`
+- Milestone 5 complete: finalized issue handoff notes, closed open items, and advanced plan state from `docs/exec-plans/active/` to `docs/exec-plans/completed/`.
 
 ## Key decisions
 
@@ -45,7 +46,19 @@ Copy the upstream `https://github.com/siisee11/harness.spec` repository into thi
 
 ## Remaining issues / open questions
 
-- None for current scope; remaining work is final issue handoff and plan state transition.
+- None.
+
+## Final summary
+
+- Imported upstream `siisee11/harness.spec` repository snapshot into `specs/harness-spec/` (excluding upstream `.git` metadata).
+- Added `specs/harness-spec/UPSTREAM.md` with source URL, resolved commit, and SHA-256 integrity hashes for imported files.
+- Added repository-level test `scripts/harness-spec-import.test.mts` to enforce expected imported file set, `.git` exclusion, and provenance metadata markers.
+- Completed touched-scope validation for import and discovery surfaces:
+  - `bun test scripts/harness-spec-import.test.mts`
+  - `bun test scripts/install-spec.test.mts`
+  - `npm_config_cache=/tmp/jan11-npm-cache npm --prefix apps/web ci`
+  - `npm_config_cache=/tmp/jan11-npm-cache npm --prefix apps/web exec -- vitest run src/lib/spec-discovery.test.ts --coverage=false`
+- Handoff status: issue scope complete for Ralph loop handoff.
 
 ## Links to related documents
 
