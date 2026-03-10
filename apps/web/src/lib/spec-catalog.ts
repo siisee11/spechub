@@ -86,7 +86,7 @@ export function buildSpecCatalog(
   repoSource?: RepoSource,
 ): SpecCatalogEntry[] {
   return specFiles
-    .map((file) => {
+    .map<SpecCatalogEntry | null>((file) => {
       const slug = extractSpecSlugFromPath(file.path);
       if (!slug) {
         return null;

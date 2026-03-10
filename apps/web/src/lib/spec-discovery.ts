@@ -62,7 +62,7 @@ export async function loadSpecMarkdownFilesFromRepository(repoRoot: string): Pro
   const files = await Promise.all(
     entries
       .filter((entry) => entry.isDirectory())
-      .map(async (entry) => {
+      .map<Promise<SpecMarkdownFile | null>>(async (entry) => {
         const specRoot = path.join(specsRoot, entry.name);
         const specPath = path.join(specRoot, 'SPEC.md');
 

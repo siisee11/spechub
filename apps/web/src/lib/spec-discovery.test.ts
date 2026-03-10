@@ -53,6 +53,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
 
     await mkdir(path.join(repoRoot, 'specs', 'symphony'), { recursive: true });
     await mkdir(path.join(repoRoot, 'specs', 'broken-spec'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'specs', 'invalid-json'), { recursive: true });
 
     await writeFile(path.join(repoRoot, 'specs', 'symphony', 'SPEC.md'), '# Symphony\n\nAgent loop.\n', 'utf8');
     await writeFile(
@@ -70,6 +71,8 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
 
     await writeFile(path.join(repoRoot, 'specs', 'broken-spec', 'SPEC.md'), '# Broken\n\nBad metadata.\n', 'utf8');
     await writeFile(path.join(repoRoot, 'specs', 'broken-spec', 'metadata.json'), '{"source": 42}', 'utf8');
+    await writeFile(path.join(repoRoot, 'specs', 'invalid-json', 'SPEC.md'), '# Invalid Json\n\nBad metadata json.\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'specs', 'invalid-json', 'metadata.json'), '{', 'utf8');
 
     const files = (await loadSpecMarkdownFilesFromRepository(repoRoot)).sort((a, b) => a.path.localeCompare(b.path));
 
@@ -77,6 +80,11 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
       {
         path: 'specs/broken-spec/SPEC.md',
         content: '# Broken\n\nBad metadata.\n',
+        metadata: null,
+      },
+      {
+        path: 'specs/invalid-json/SPEC.md',
+        content: '# Invalid Json\n\nBad metadata json.\n',
         metadata: null,
       },
       {

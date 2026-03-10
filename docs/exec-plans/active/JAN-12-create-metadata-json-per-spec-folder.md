@@ -26,7 +26,7 @@ Implement per-spec metadata for vendored specs by adding `metadata.json` in each
 - [x] Extend spec discovery/catalog logic to load and carry metadata fields.
 - [x] Render `source` and `synced_date` in the web UI detail/list views.
 - [x] Add/update automated tests for discovery parsing, catalog mapping, and UI rendering of metadata.
-- [ ] Run targeted validation commands and fix failures.
+- [x] Run targeted validation commands and fix failures.
 
 ## Current progress
 
@@ -59,6 +59,16 @@ Implement per-spec metadata for vendored specs by adding `metadata.json` in each
   - Expanded discovery tests to cover metadata trimming and empty-field rejection in `apps/web/src/lib/spec-discovery.test.ts`.
   - Expanded catalog tests to verify missing metadata defaults to `null` in `apps/web/src/lib/spec-catalog.test.ts`.
   - Expanded UI tests to assert metadata label rendering (`Source`, `Origin`, and `Synced date (UTC)`) in `apps/web/src/App.test.tsx`.
+- Milestone 6 completed:
+  - Ran targeted validation:
+    - `cd apps/web && npm run typecheck`
+    - `cd apps/web && npm run test`
+  - Fixed typecheck failures by tightening `map` typing in:
+    - `apps/web/src/lib/spec-catalog.ts`
+    - `apps/web/src/lib/spec-discovery.ts`
+  - Fixed coverage threshold failures by adding malformed JSON coverage in:
+    - `apps/web/src/lib/spec-discovery.test.ts`
+  - Final validation result: typecheck passes and test coverage is `100%` for statements/branches/functions/lines.
 
 ## Key decisions
 
