@@ -17,7 +17,7 @@ Repository constraints require following canonical docs (`AGENTS.md`, `ARCHITECT
 
 ## Milestones
 
-- [ ] Milestone 1: Identify the correct surface for JAN-10's greeting behavior and define the acceptance contract.
+- [x] Milestone 1: Identify the correct surface for JAN-10's greeting behavior and define the acceptance contract.
 - [ ] Milestone 2: Implement the greeting behavior with focused code changes only in the selected surface.
 - [ ] Milestone 3: Add/update automated tests for all touched code paths and verify checks for the changed scope.
 - [ ] Milestone 4: Mark issue work complete and hand off through the normal Ralph loop flow.
@@ -35,17 +35,26 @@ Repository constraints require following canonical docs (`AGENTS.md`, `ARCHITECT
   - `ARCHITECTURE.md`
   - `NON_NEGOTIABLE_RULES.md`
   - `docs/PLANS.md`
+- Mapped current user-facing surfaces and constraints:
+  - `harnesscli` (`harness/src/main.rs`) is the harness control plane, not the product UI surface.
+  - `apps/web` is the product-facing website surface for end-user-visible copy and interactions.
+- Completed Milestone 1 by selecting `apps/web` as the greeting surface and locking the acceptance contract for implementation.
 - Created this execution plan in `docs/exec-plans/active/` as source of truth for JAN-10 implementation.
 
 ## Key decisions
 
 - Use current checked-out worktree/branch context because harness init checkout could not complete in this environment.
 - Keep implementation minimal and issue-scoped, with tests updated in the same iteration as code changes.
+- Implement the greeting in `apps/web/src/App.tsx` to align with architecture boundaries that keep product-facing behavior out of `harnesscli`.
+- Acceptance contract for the next implementation milestone:
+  - Add visible greeting copy that says hi to Jay in the web app hero area.
+  - Preserve existing app behavior and copy interactions for spec cards/detail actions.
+  - Cover the new greeting behavior with automated tests in `apps/web/src/App.test.tsx`.
 - Track progress in this active plan until implementation lands, then move to `docs/exec-plans/completed/`.
 
 ## Remaining issues / open questions
 
-- Which exact user-facing surface should host the greeting behavior for this issue (CLI output, web UI, or another existing entrypoint)?
+- None for Milestone 1.
 
 ## Links to related documents
 
