@@ -21,7 +21,7 @@ Implement per-spec metadata for vendored specs by adding `metadata.json` in each
 
 ## Milestones
 
-- [ ] Create `metadata.json` in each remaining spec folder with correct `source` and current UTC `synced_date`.
+- [x] Create `metadata.json` in each remaining spec folder with correct `source` and current UTC `synced_date`.
 - [ ] Remove `specs/create-harness/` and update any tests/fixtures that currently expect it.
 - [ ] Extend spec discovery/catalog logic to load and carry metadata fields.
 - [ ] Render `source` and `synced_date` in the web UI detail/list views.
@@ -32,7 +32,13 @@ Implement per-spec metadata for vendored specs by adding `metadata.json` in each
 
 - Guardrails reviewed: `AGENTS.md`, `ARCHITECTURE.md`, `NON_NEGOTIABLE_RULES.md`, and `docs/PLANS.md`.
 - Execution plan created under `docs/exec-plans/active/`.
-- Implementation not started yet.
+- Milestone 1 completed:
+  - Added `specs/symphony/metadata.json` with:
+    - `source`: `https://github.com/openai/symphony`
+    - `synced_date`: `2026-03-10T12:34:10Z`
+  - Added `specs/harness-spec/metadata.json` with:
+    - `source`: `https://github.com/siisee11/harness.spec`
+    - `synced_date`: `2026-03-10T12:34:10Z`
 
 ## Key decisions
 
