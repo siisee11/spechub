@@ -16,7 +16,7 @@ Copy the upstream `https://github.com/siisee11/harness.spec` repository into thi
 - [x] Inspect `specs/` and define import shape (vendored snapshot vs git subtree/submodule style metadata-free copy).
 - [x] Copy `harness.spec` contents into `specs/` while preserving required files and excluding irrelevant git metadata.
 - [x] Add or update tests/checks that validate expected imported structure/content.
-- [ ] Run repository validation commands for touched scope and fix any failures.
+- [x] Run repository validation commands for touched scope and fix any failures.
 - [ ] Prepare issue handoff notes and move plan state forward.
 
 ## Current progress
@@ -26,6 +26,11 @@ Copy the upstream `https://github.com/siisee11/harness.spec` repository into thi
 - Milestone 1 complete: inspected existing `specs/` conventions (`specs/create-harness`, `specs/symphony`) and upstream `siisee11/harness.spec` repository layout.
 - Milestone 2 complete: imported upstream tracked files into `specs/harness-spec/` and added `specs/harness-spec/UPSTREAM.md` provenance metadata for commit `7779e5f7f2ecffc78174d8381a488e3f08a0ce12`.
 - Milestone 3 complete: added `scripts/harness-spec-import.test.mts` to validate vendored file set, `.git` metadata exclusion, and `UPSTREAM.md` provenance fields for `specs/harness-spec/`.
+- Milestone 4 complete: ran touched-scope validation commands and confirmed pass:
+  - `bun test scripts/harness-spec-import.test.mts`
+  - `bun test scripts/install-spec.test.mts`
+  - `npm_config_cache=/tmp/jan11-npm-cache npm --prefix apps/web ci`
+  - `npm_config_cache=/tmp/jan11-npm-cache npm --prefix apps/web exec -- vitest run src/lib/spec-discovery.test.ts --coverage=false`
 
 ## Key decisions
 
@@ -36,10 +41,11 @@ Copy the upstream `https://github.com/siisee11/harness.spec` repository into thi
 - Add `specs/harness-spec/UPSTREAM.md` during import to record repository URL, fetched reference, resolved commit, and file integrity hashes for reproducibility.
 - Imported file set mirrors upstream tracked files at commit `7779e5f7f2ecffc78174d8381a488e3f08a0ce12` (plus local `UPSTREAM.md` metadata).
 - Import validation strategy is a repository-level Bun test that enforces expected snapshot structure and provenance markers.
+- For this environment, npm-based validation uses a temp cache path under `/tmp` to avoid local cache permission issues (`/Users/dev/.npm` ownership mismatch).
 
 ## Remaining issues / open questions
 
-- Identify the minimal automated tests/checks that satisfy "update tests for every code change" for this import-heavy task.
+- None for current scope; remaining work is final issue handoff and plan state transition.
 
 ## Links to related documents
 
