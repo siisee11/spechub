@@ -241,3 +241,34 @@ test("full loop wires phases together and exposes runtime root", async () => {
   expect(runtimeRoots).toEqual([`${worktreePath}/.worktree/wt-1`]);
   expect(progress).toEqual(["setup phase", "coding phase", "pr phase"]);
 });
+
+test("full loop aborts when the signal is triggered", async () => {
+  const controller = new AbortController();
+  const session = createFakeSession([
+    {
+      turnId: "turn_setup",
+      status: "completed",
+      agentText: "/tmp/worktree/docs/exec-plans/active/task.md\n<promise>COMPLETE</promise>",
+      items: [],
+    },
+  ]);
+
+  await expect(
+    runRalphLoop(
+      {
+        task: "Task",
+        repoRoot: "/repo",
+        model: "gpt-5.3-codex",
+        baseBranch: "main",
+        maxIterations: 2,
+        approvalPolicy: "never",
+        sandbox: "workspace-write",
+        signal: controller.signal,
+      },
+      async () => {
+        controller.abort();
+        return session;
+      },
+    ),
+  ).rejects.toThrow("ralph loop aborted");
+});

@@ -15,7 +15,7 @@ type JsonRpcResponse = {
   };
 };
 
-type JsonRpcNotification = {
+export type JsonRpcNotification = {
   method: string;
   params?: Record<string, unknown>;
 };
@@ -147,13 +147,16 @@ export class CodexAppServerClient {
   #stdoutLoop: Promise<void>;
   #closed = false;
   #logLine?: (line: string) => void | Promise<void>;
+  #onNotification?: (notification: JsonRpcNotification) => void | Promise<void>;
 
   private constructor(
     proc: Bun.Subprocess<"pipe", "pipe", "inherit">,
     logLine?: (line: string) => void | Promise<void>,
+    onNotification?: (notification: JsonRpcNotification) => void | Promise<void>,
   ) {
     this.#process = proc;
     this.#logLine = logLine;
+    this.#onNotification = onNotification;
     this.#stdoutLoop = this.#consumeStdout();
     void this.#process.exited.then(() => {
       this.#failOutstanding(new Error("codex app-server exited unexpectedly"));
@@ -162,16 +165,18 @@ export class CodexAppServerClient {
 
   static async connect(options?: {
     command?: string[];
+    cwd?: string;
     logLine?: (line: string) => void | Promise<void>;
+    onNotification?: (notification: JsonRpcNotification) => void | Promise<void>;
   }): Promise<CodexAppServerClient> {
     const cmd = options?.command ?? ["codex", "app-server"];
     const proc = Bun.spawn(cmd, {
-      cwd: process.cwd(),
+      cwd: options?.cwd ?? process.cwd(),
       stdin: "pipe",
       stdout: "pipe",
       stderr: "inherit",
     });
-    const client = new CodexAppServerClient(proc, options?.logLine);
+    const client = new CodexAppServerClient(proc, options?.logLine, options?.onNotification);
     await client.initialize();
     return client;
   }
@@ -302,6 +307,7 @@ export class CodexAppServerClient {
   }
 
   #handleNotification(notification: JsonRpcNotification): void {
+    void this.#onNotification?.(notification);
     for (const waiter of [...this.#waiters]) {
       if (!waiter.predicate(notification)) {
         continue;

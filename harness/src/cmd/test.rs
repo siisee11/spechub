@@ -14,7 +14,12 @@ pub fn run() -> Result<()> {
         "cargo test",
     )?;
 
-    process::run_command("bun", ["test", "scripts/ralph-loop"], None, "bun test")
+    process::run_command(
+        "bun",
+        ["test", "scripts/ralph-loop", "scripts/symphony"],
+        None,
+        "bun test",
+    )
 }
 
 #[cfg(test)]

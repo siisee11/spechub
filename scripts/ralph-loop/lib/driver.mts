@@ -43,6 +43,7 @@ type RalphLoopOptions = {
   workBranch?: string;
   approvalPolicy: string;
   sandbox: string;
+  signal?: AbortSignal;
   onRuntimeRoot?: (runtimeRoot: string) => Promise<void> | void;
   onProgress?: (message: string) => void;
 };
@@ -63,6 +64,9 @@ export async function runRalphLoop(
   options: RalphLoopOptions,
   startSession: StartSession,
 ): Promise<RalphLoopOutcome> {
+  if (options.signal?.aborted) {
+    throw abortError();
+  }
   const workBranch = options.workBranch ?? `ralph/${slugifyPrompt(options.task)}`;
   const expectedPlanPath = `docs/exec-plans/active/${slugifyPrompt(options.task)}.md`;
 
@@ -73,16 +77,18 @@ export async function runRalphLoop(
     planFilePath: string;
   };
   try {
-    setupResult = await runSetupPhase(setupSession, {
-      task: options.task,
-      model: options.model,
-      baseBranch: options.baseBranch,
-      workBranch,
-      repoRoot: options.repoRoot,
-      expectedPlanPath,
-      approvalPolicy: options.approvalPolicy,
-      sandbox: options.sandbox,
-    });
+    setupResult = await withAbortableSession(options.signal, setupSession, () =>
+      runSetupPhase(setupSession, {
+        task: options.task,
+        model: options.model,
+        baseBranch: options.baseBranch,
+        workBranch,
+        repoRoot: options.repoRoot,
+        expectedPlanPath,
+        approvalPolicy: options.approvalPolicy,
+        sandbox: options.sandbox,
+      }),
+    );
   } finally {
     await setupSession.close();
   }
@@ -97,15 +103,17 @@ export async function runRalphLoop(
   const codingSession = await startSession();
   let iterations = 0;
   try {
-    iterations = await runCodingPhase(codingSession, {
-      task: options.task,
-      model: options.model,
-      worktreePath: setupResult.initOutput.worktree_path,
-      planFilePath: setupResult.planFilePath,
-      approvalPolicy: options.approvalPolicy,
-      sandbox: options.sandbox,
-      maxIterations: options.maxIterations,
-    });
+    iterations = await withAbortableSession(options.signal, codingSession, () =>
+      runCodingPhase(codingSession, {
+        task: options.task,
+        model: options.model,
+        worktreePath: setupResult.initOutput.worktree_path,
+        planFilePath: setupResult.planFilePath,
+        approvalPolicy: options.approvalPolicy,
+        sandbox: options.sandbox,
+        maxIterations: options.maxIterations,
+      }),
+    );
   } finally {
     await codingSession.close();
   }
@@ -114,14 +122,16 @@ export async function runRalphLoop(
   const prSession = await startSession();
   let prAgentOutput = "";
   try {
-    prAgentOutput = await runPrPhase(prSession, {
-      model: options.model,
-      worktreePath: setupResult.initOutput.worktree_path,
-      planFilePath: setupResult.planFilePath,
-      baseBranch: options.baseBranch,
-      approvalPolicy: options.approvalPolicy,
-      sandbox: options.sandbox,
-    });
+    prAgentOutput = await withAbortableSession(options.signal, prSession, () =>
+      runPrPhase(prSession, {
+        model: options.model,
+        worktreePath: setupResult.initOutput.worktree_path,
+        planFilePath: setupResult.planFilePath,
+        baseBranch: options.baseBranch,
+        approvalPolicy: options.approvalPolicy,
+        sandbox: options.sandbox,
+      }),
+    );
   } finally {
     await prSession.close();
   }
@@ -134,6 +144,39 @@ export async function runRalphLoop(
     prAgentOutput,
     iterations,
   };
+}
+
+async function withAbortableSession<T>(
+  signal: AbortSignal | undefined,
+  session: Session,
+  action: () => Promise<T>,
+): Promise<T> {
+  if (!signal) {
+    return action();
+  }
+  if (signal.aborted) {
+    await session.close();
+    throw abortError();
+  }
+  const onAbort = () => {
+    void session.close();
+  };
+  signal.addEventListener("abort", onAbort, { once: true });
+  try {
+    const result = await action();
+    if (signal.aborted) {
+      throw abortError();
+    }
+    return result;
+  } finally {
+    signal.removeEventListener("abort", onAbort);
+  }
+}
+
+function abortError(): Error {
+  const error = new Error("ralph loop aborted");
+  error.name = "AbortError";
+  return error;
 }
 
 export async function runSetupPhase(
