@@ -11,12 +11,12 @@ import {
 describe('parseSpecMarkdown', () => {
   it('uses markdown heading and first non-heading summary line', () => {
     const parsed = parseSpecMarkdown(
-      'create-harness',
-      '# Create Harness\n\n## Summary\n`code`\nBuild a portable harness engineering system.\n',
+      'harness-spec',
+      '# Harness Spec\n\n## Summary\n`code`\nBuild a portable harness engineering system.\n',
     );
 
     expect(parsed).toEqual({
-      name: 'Create Harness',
+      name: 'Harness Spec',
       description: 'Build a portable harness engineering system.',
     });
   });
@@ -47,32 +47,32 @@ describe('parseGitHubOwnerRepo', () => {
 
 describe('extractSpecSlugFromPath', () => {
   it('extracts slug from POSIX and Windows-style paths', () => {
-    expect(extractSpecSlugFromPath('specs/create-harness/SPEC.md')).toBe('create-harness');
+    expect(extractSpecSlugFromPath('specs/harness-spec/SPEC.md')).toBe('harness-spec');
     expect(extractSpecSlugFromPath('specs\\demo-spec\\SPEC.md')).toBe('demo-spec');
   });
 
   it('returns null when the path does not point to a spec markdown file', () => {
-    expect(extractSpecSlugFromPath('specs/create-harness/README.md')).toBeNull();
+    expect(extractSpecSlugFromPath('specs/harness-spec/README.md')).toBeNull();
   });
 });
 
 describe('buildInstallCommand', () => {
   it('builds command from concrete repo source', () => {
-    const command = buildInstallCommand('create-harness', {
+    const command = buildInstallCommand('harness-spec', {
       ownerRepo: 'openai/spechub',
       ref: 'main',
     });
 
     expect(command).toBe(
-      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "create-harness"',
+      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "harness-spec"',
     );
   });
 
   it('builds placeholder command when repo source is unavailable', () => {
-    const command = buildInstallCommand('create-harness');
+    const command = buildInstallCommand('harness-spec');
 
     expect(command).toContain('REPO=owner/repo REF=main');
-    expect(command).toContain('"create-harness"');
+    expect(command).toContain('"harness-spec"');
   });
 });
 

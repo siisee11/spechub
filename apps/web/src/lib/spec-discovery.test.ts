@@ -28,12 +28,12 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
   it('loads only SPEC.md files from spec directories', async () => {
     const repoRoot = await createTempRepo();
 
-    await mkdir(path.join(repoRoot, 'specs', 'create-harness'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'specs', 'harness-spec'), { recursive: true });
     await mkdir(path.join(repoRoot, 'specs', 'missing-spec-file'), { recursive: true });
     await writeFile(path.join(repoRoot, 'specs', 'README.md'), 'not a spec directory', 'utf8');
     await writeFile(
-      path.join(repoRoot, 'specs', 'create-harness', 'SPEC.md'),
-      '# Create Harness\n\nBuild systems.\n',
+      path.join(repoRoot, 'specs', 'harness-spec', 'SPEC.md'),
+      '# Harness Spec\n\nBuild systems.\n',
       'utf8',
     );
 
@@ -41,8 +41,8 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
 
     expect(files).toEqual([
       {
-        path: 'specs/create-harness/SPEC.md',
-        content: '# Create Harness\n\nBuild systems.\n',
+        path: 'specs/harness-spec/SPEC.md',
+        content: '# Harness Spec\n\nBuild systems.\n',
       },
     ]);
   });

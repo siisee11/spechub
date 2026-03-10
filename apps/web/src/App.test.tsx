@@ -5,12 +5,12 @@ import type { SpecCatalogEntry } from './lib/spec-catalog';
 
 const SAMPLE_SPECS: SpecCatalogEntry[] = [
   {
-    slug: 'create-harness',
-    name: 'Create Harness',
+    slug: 'harness-spec',
+    name: 'Harness Spec',
     description: 'Build a portable harness engineering system.',
-    specPath: 'specs/create-harness',
+    specPath: 'specs/harness-spec',
     installCommand:
-      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "create-harness"',
+      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "harness-spec"',
   },
   {
     slug: 'docs-blueprint',
@@ -34,7 +34,7 @@ describe('App', () => {
       screen.getByText((_, element) => element?.textContent === 'Each install command downloads the full spec folder, including files next to SPEC.md.'),
     ).toBeInTheDocument();
 
-    expect(screen.getAllByRole('heading', { name: 'Create Harness' })).toHaveLength(2);
+    expect(screen.getAllByRole('heading', { name: 'Harness Spec' })).toHaveLength(2);
     expect(screen.getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('View details for docs-blueprint'));
