@@ -29,6 +29,7 @@ describe('App', () => {
     render(<App specs={SAMPLE_SPECS} onCopyInstallCommand={copyMock} />);
 
     expect(screen.getByRole('heading', { name: 'SpecHub' })).toBeInTheDocument();
+    expect(screen.getByText('Hi Jay.')).toBeInTheDocument();
     expect(screen.getByText('Open community marketplace for sharable specs.')).toBeInTheDocument();
     expect(
       screen.getByText((_, element) => element?.textContent === 'Each install command downloads the full spec folder, including files next to SPEC.md.'),
