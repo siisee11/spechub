@@ -22,6 +22,7 @@ export default function App({
       <header className="hero">
         <p className="eyebrow">COMMUNITY SPECS</p>
         <h1>SpecHub</h1>
+        <p className="hero-copy">Hi Jay.</p>
         <p className="hero-copy">Open community marketplace for sharable specs.</p>
         <p className="hero-copy">Browse repository-backed specs, inspect details, and copy install commands.</p>
         <p className="hero-copy">Each install command downloads the full spec folder, including files next to <code>SPEC.md</code>.</p>

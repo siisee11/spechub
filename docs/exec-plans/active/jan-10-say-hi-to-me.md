@@ -18,7 +18,7 @@ Repository constraints require following canonical docs (`AGENTS.md`, `ARCHITECT
 ## Milestones
 
 - [x] Milestone 1: Identify the correct surface for JAN-10's greeting behavior and define the acceptance contract.
-- [ ] Milestone 2: Implement the greeting behavior with focused code changes only in the selected surface.
+- [x] Milestone 2: Implement the greeting behavior with focused code changes only in the selected surface.
 - [ ] Milestone 3: Add/update automated tests for all touched code paths and verify checks for the changed scope.
 - [ ] Milestone 4: Mark issue work complete and hand off through the normal Ralph loop flow.
 
@@ -39,6 +39,11 @@ Repository constraints require following canonical docs (`AGENTS.md`, `ARCHITECT
   - `harnesscli` (`harness/src/main.rs`) is the harness control plane, not the product UI surface.
   - `apps/web` is the product-facing website surface for end-user-visible copy and interactions.
 - Completed Milestone 1 by selecting `apps/web` as the greeting surface and locking the acceptance contract for implementation.
+- Completed Milestone 2 with a minimal product-surface change:
+  - Added visible greeting copy `Hi Jay.` in `apps/web/src/App.tsx` hero content.
+  - Preserved existing spec catalog and copy-to-clipboard interactions unchanged.
+  - Updated `apps/web/src/App.test.tsx` to assert the greeting text.
+  - Ran `npm test` in `apps/web`; suite passed with 100% coverage.
 - Created this execution plan in `docs/exec-plans/active/` as source of truth for JAN-10 implementation.
 
 ## Key decisions
