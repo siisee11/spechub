@@ -11,6 +11,10 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
     specPath: 'specs/harness-spec',
     installCommand:
       'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "harness-spec"',
+    metadata: {
+      source: 'https://github.com/siisee11/harness.spec',
+      syncedDate: '2026-03-10T12:34:10Z',
+    },
   },
   {
     slug: 'docs-blueprint',
@@ -19,6 +23,7 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
     specPath: 'specs/docs-blueprint',
     installCommand:
       'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"',
+    metadata: null,
   },
 ];
 
@@ -36,6 +41,8 @@ describe('App', () => {
 
     expect(screen.getAllByRole('heading', { name: 'Harness Spec' })).toHaveLength(2);
     expect(screen.getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).toHaveLength(2);
+    expect(screen.getAllByText('2026-03-10T12:34:10Z')).toHaveLength(2);
 
     fireEvent.click(screen.getByLabelText('View details for docs-blueprint'));
     expect(screen.getAllByRole('heading', { name: 'Docs Blueprint' })).toHaveLength(2);
@@ -43,6 +50,7 @@ describe('App', () => {
     expect(
       screen.getByText((_, element) => element?.textContent === 'Install commands copy the full specs/docs-blueprint directory, not just SPEC.md.'),
     ).toBeInTheDocument();
+    expect(screen.getAllByText('Unknown')).toHaveLength(4);
 
     fireEvent.click(screen.getByLabelText('Copy install command for docs-blueprint'));
     expect(copyMock).toHaveBeenCalledWith(
