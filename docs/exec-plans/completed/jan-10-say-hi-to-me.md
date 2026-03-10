@@ -20,7 +20,7 @@ Repository constraints require following canonical docs (`AGENTS.md`, `ARCHITECT
 - [x] Milestone 1: Identify the correct surface for JAN-10's greeting behavior and define the acceptance contract.
 - [x] Milestone 2: Implement the greeting behavior with focused code changes only in the selected surface.
 - [x] Milestone 3: Add/update automated tests for all touched code paths and verify checks for the changed scope.
-- [ ] Milestone 4: Mark issue work complete and hand off through the normal Ralph loop flow.
+- [x] Milestone 4: Mark issue work complete and hand off through the normal Ralph loop flow.
 
 ## Current progress
 
@@ -48,6 +48,10 @@ Repository constraints require following canonical docs (`AGENTS.md`, `ARCHITECT
   - Confirmed `apps/web/src/App.test.tsx` covers the greeting behavior and existing interactions.
   - Ran `npm run typecheck` in `apps/web` successfully.
   - Re-ran `npm test` in `apps/web`; all tests passed with 100% statement/branch/function/line coverage.
+- Completed Milestone 4 handoff:
+  - Verified all JAN-10 milestones are complete.
+  - Finalized plan state for archival and Ralph-loop completion signaling.
+  - Prepared this plan to move from `docs/exec-plans/active/` to `docs/exec-plans/completed/`.
 - Created this execution plan in `docs/exec-plans/active/` as source of truth for JAN-10 implementation.
 
 ## Key decisions
@@ -63,7 +67,7 @@ Repository constraints require following canonical docs (`AGENTS.md`, `ARCHITECT
 
 ## Remaining issues / open questions
 
-- None for Milestone 1.
+- None. JAN-10 scope is complete.
 
 ## Links to related documents
 
