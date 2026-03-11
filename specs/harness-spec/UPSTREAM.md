@@ -6,7 +6,7 @@ This directory vendors third-party specification content from `siisee11/harness.
 
 - Repository: `https://github.com/siisee11/harness.spec`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-10): `7779e5f7f2ecffc78174d8381a488e3f08a0ce12`
+- Resolved commit at fetch time (2026-03-11): `7779e5f7f2ecffc78174d8381a488e3f08a0ce12`
 - License in upstream repo: no top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs
@@ -16,7 +16,7 @@ This directory vendors third-party specification content from `siisee11/harness.
 
 ## Import method
 
-- Vendored snapshot copy under `specs/harness-spec/`.
+- Vendored snapshot copy under the corresponding `specs/<slug>/` directory.
 - Upstream git metadata (`.git/`) excluded.
 - Imported payload mirrors upstream tracked files at the resolved commit.
 
@@ -45,5 +45,6 @@ This directory vendors third-party specification content from `siisee11/harness.
 
 ## Modification status
 
-- All files except `UPSTREAM.md` are unmodified copies of upstream tracked files at commit `7779e5f7f2ecffc78174d8381a488e3f08a0ce12`.
+- All files except `metadata.json` and `UPSTREAM.md` are unmodified copies of upstream tracked files at commit `7779e5f7f2ecffc78174d8381a488e3f08a0ce12`.
+- `metadata.json` is repository-local discovery metadata.
 - `UPSTREAM.md` is repository-local provenance metadata.

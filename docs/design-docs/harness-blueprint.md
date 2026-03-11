@@ -1,6 +1,6 @@
 # Harness Blueprint
 
-This repository applies `create-harness/SPEC.md` to itself.
+This repository applies [`specs/harness-spec/SPEC.md`](../../specs/harness-spec/SPEC.md) to itself.
 
 ## Scope
 

@@ -57,6 +57,7 @@ test("harness-spec import contains the expected vendored file set", async () => 
     "SPEC.md",
     "UPSTREAM.md",
     "harness-scaffolding-checklist.md",
+    "metadata.json",
     "references/codex-app-server-llm.txt",
     "references/scripts/ralph-loop/lib/cli-options.mts",
     "references/scripts/ralph-loop/lib/codex-client.mts",

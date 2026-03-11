@@ -41,7 +41,7 @@ docs/
 
 - Canonical guardrails: [`NON_NEGOTIABLE_RULES.md`](NON_NEGOTIABLE_RULES.md)
 - Repository topology and dependency direction: [`ARCHITECTURE.md`](ARCHITECTURE.md)
-- Harness implementation spec source: [`create-harness/SPEC.md`](create-harness/SPEC.md)
+- Harness implementation spec source: [`specs/harness-spec/SPEC.md`](specs/harness-spec/SPEC.md)
 
 ## Canonical Maps
 
