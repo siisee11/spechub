@@ -145,17 +145,31 @@ test("linear tracker resolves viewer, workflow states, issue updates, and commen
         );
       }
       if (query.includes("query WorkflowStates")) {
+        const cursor = (request.variables as Record<string, unknown>).cursor;
         return new Response(
           JSON.stringify({
             data: {
               workflowStates: {
-                nodes: [
-                  {
-                    id: "state-1",
-                    name: "In Progress",
-                    team: { id: "team-1" },
-                  },
-                ],
+                nodes:
+                  cursor === null
+                    ? [
+                        {
+                          id: "state-0",
+                          name: "Todo",
+                          team: { id: "team-1" },
+                        },
+                      ]
+                    : [
+                        {
+                          id: "state-1",
+                          name: "In Progress",
+                          team: { id: "team-1" },
+                        },
+                      ],
+                pageInfo:
+                  cursor === null
+                    ? { hasNextPage: true, endCursor: "next-page" }
+                    : { hasNextPage: false, endCursor: null },
               },
             },
           }),
@@ -195,18 +209,109 @@ test("linear tracker resolves viewer, workflow states, issue updates, and commen
     body: "hello",
   });
 
-  expect(requests).toHaveLength(4);
+  expect(requests).toHaveLength(5);
+  expect(requests[1]?.variables).toEqual({
+    cursor: null,
+    first: 100,
+  });
   expect(requests[2]?.variables).toEqual({
+    cursor: "next-page",
+    first: 100,
+  });
+  expect(requests[3]?.variables).toEqual({
     id: "issue-1",
     input: {
       stateId: "state-1",
       assigneeId: "user-1",
     },
   });
-  expect(requests[3]?.variables).toEqual({
+  expect(requests[4]?.variables).toEqual({
     input: {
       issueId: "issue-1",
       body: "hello",
     },
+  });
+});
+
+test("linear tracker rejects unsuccessful issue and comment mutations", async () => {
+  const issueTracker = createLinearTracker({
+    endpoint: "https://linear.test/graphql",
+    apiKey: "token",
+    projectSlug: "app",
+    activeStates: ["Todo"],
+    terminalStates: ["Done"],
+    fetchImpl: async () =>
+      new Response(
+        JSON.stringify({
+          data: {
+            issueUpdate: { success: false },
+          },
+        }),
+        { status: 200 },
+      ),
+  });
+  const commentTracker = createLinearTracker({
+    endpoint: "https://linear.test/graphql",
+    apiKey: "token",
+    projectSlug: "app",
+    activeStates: ["Todo"],
+    terminalStates: ["Done"],
+    fetchImpl: async () =>
+      new Response(
+        JSON.stringify({
+          data: {
+            commentCreate: { success: false },
+          },
+        }),
+        { status: 200 },
+      ),
+  });
+
+  await expect(
+    issueTracker.updateIssue({
+      issueId: "issue-1",
+      stateId: "state-1",
+    }),
+  ).rejects.toMatchObject<TrackerError>({
+    code: "linear_mutation_failed",
+  });
+  await expect(
+    commentTracker.createComment({
+      issueId: "issue-1",
+      body: "hello",
+    }),
+  ).rejects.toMatchObject<TrackerError>({
+    code: "linear_mutation_failed",
+  });
+});
+
+test("linear tracker requires workflow state pagination cursors when more pages exist", async () => {
+  const tracker = createLinearTracker({
+    endpoint: "https://linear.test/graphql",
+    apiKey: "token",
+    projectSlug: "app",
+    activeStates: ["Todo"],
+    terminalStates: ["Done"],
+    fetchImpl: async () =>
+      new Response(
+        JSON.stringify({
+          data: {
+            workflowStates: {
+              nodes: [],
+              pageInfo: { hasNextPage: true, endCursor: null },
+            },
+          },
+        }),
+        { status: 200 },
+      ),
+  });
+
+  await expect(
+    tracker.resolveWorkflowStateId({
+      teamId: "team-1",
+      stateName: "In Review",
+    }),
+  ).rejects.toMatchObject<TrackerError>({
+    code: "linear_missing_end_cursor",
   });
 });

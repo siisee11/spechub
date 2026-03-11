@@ -44,6 +44,7 @@ function createConfig(): SymphonyConfig {
         comment: "Started {{ issue.identifier }} attempt {{ attempt }}",
       },
       completion: {
+        state: "In Review",
         comment: "PR {{ result.pr_url }}",
       },
       failure: {
@@ -53,7 +54,7 @@ function createConfig(): SymphonyConfig {
   };
 }
 
-function createIssue(): NormalizedIssue {
+function createIssue(overrides?: Partial<NormalizedIssue>): NormalizedIssue {
   return {
     id: "issue-1",
     identifier: "ABC-1",
@@ -68,6 +69,7 @@ function createIssue(): NormalizedIssue {
     blocked_by: [],
     created_at: null,
     updated_at: null,
+    ...overrides,
   };
 }
 
@@ -82,7 +84,11 @@ test("linear lifecycle writer applies dispatch, completion, and failure actions"
     },
     getViewer: async () => ({ id: "user-1" }),
     resolveWorkflowStateId: async ({ teamId, stateName }) =>
-      teamId === "team-1" && stateName === "In Progress" ? "state-1" : null,
+      teamId === "team-1" && stateName === "In Progress"
+        ? "state-1"
+        : teamId === "team-1" && stateName === "In Review"
+          ? "state-2"
+          : null,
   });
   const config = createConfig();
   const issue = createIssue();
@@ -115,9 +121,61 @@ test("linear lifecycle writer applies dispatch, completion, and failure actions"
   expect(calls).toEqual([
     'update:{"issueId":"issue-1","stateId":"state-1","assigneeId":"user-1"}',
     "comment:Started ABC-1 attempt 2",
-    'update:{"issueId":"issue-1"}',
+    'update:{"issueId":"issue-1","stateId":"state-2"}',
     "comment:PR https://github.com/acme/repo/pull/42",
     'update:{"issueId":"issue-1"}',
     "comment:Failed ABC-1: boom",
   ]);
+});
+
+test("linear lifecycle writer rejects configured state changes that cannot be resolved", async () => {
+  const writer = createLinearLifecycleWriter({
+    updateIssue: async () => {
+      throw new Error("should not update issue");
+    },
+    createComment: async () => {
+      throw new Error("should not create comment");
+    },
+    getViewer: async () => ({ id: "user-1" }),
+    resolveWorkflowStateId: async () => null,
+  });
+  const config = createConfig();
+
+  await expect(
+    writer.onCompleted?.({
+      issue: createIssue(),
+      attempt: 1,
+      config,
+      result: {
+        status: "completed",
+        prUrl: "https://github.com/acme/repo/pull/42",
+      },
+    }),
+  ).rejects.toThrow("workflow state not found");
+});
+
+test("linear lifecycle writer rejects configured state changes when issue team is missing", async () => {
+  const writer = createLinearLifecycleWriter({
+    updateIssue: async () => {
+      throw new Error("should not update issue");
+    },
+    createComment: async () => {
+      throw new Error("should not create comment");
+    },
+    getViewer: async () => ({ id: "user-1" }),
+    resolveWorkflowStateId: async () => "state-2",
+  });
+  const config = createConfig();
+
+  await expect(
+    writer.onCompleted?.({
+      issue: createIssue({ team_id: null }),
+      attempt: 1,
+      config,
+      result: {
+        status: "completed",
+        prUrl: "https://github.com/acme/repo/pull/42",
+      },
+    }),
+  ).rejects.toThrow("missing team_id");
 });

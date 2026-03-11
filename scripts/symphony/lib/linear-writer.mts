@@ -62,13 +62,20 @@ async function applyAction(
     action.assignee === "viewer"
       ? (await client.getViewer()).id
       : action.assignee;
-  const stateId =
-    action.state && context.issue.team_id
-      ? await client.resolveWorkflowStateId({
-          teamId: context.issue.team_id,
-          stateName: action.state,
-        })
-      : undefined;
+  let stateId: string | undefined;
+  if (action.state) {
+    if (!context.issue.team_id) {
+      throw new Error(`issue ${context.issue.identifier} is missing team_id for state ${action.state}`);
+    }
+    stateId =
+      (await client.resolveWorkflowStateId({
+        teamId: context.issue.team_id,
+        stateName: action.state,
+      })) ?? undefined;
+    if (!stateId) {
+      throw new Error(`workflow state not found for team ${context.issue.team_id}: ${action.state}`);
+    }
+  }
   await client.updateIssue({
     issueId: context.issue.id,
     stateId: stateId ?? undefined,

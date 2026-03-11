@@ -130,7 +130,7 @@ export function createLinearTracker(options: {
       if (!stateId && !assigneeId) {
         return;
       }
-      await requestGraphql(fetchImpl, options.endpoint, options.apiKey, {
+      const payload = await requestGraphql(fetchImpl, options.endpoint, options.apiKey, {
         query: ISSUE_UPDATE_MUTATION,
         variables: {
           id: issueId,
@@ -140,12 +140,15 @@ export function createLinearTracker(options: {
           },
         },
       });
+      if (objectValue(payload.data).issueUpdate?.success !== true) {
+        throw new TrackerError("linear_mutation_failed", "issue update did not succeed");
+      }
     },
     createComment: async ({ issueId, body }) => {
       if (!body.trim()) {
         return;
       }
-      await requestGraphql(fetchImpl, options.endpoint, options.apiKey, {
+      const payload = await requestGraphql(fetchImpl, options.endpoint, options.apiKey, {
         query: COMMENT_CREATE_MUTATION,
         variables: {
           input: {
@@ -154,6 +157,9 @@ export function createLinearTracker(options: {
           },
         },
       });
+      if (objectValue(payload.data).commentCreate?.success !== true) {
+        throw new TrackerError("linear_mutation_failed", "comment creation did not succeed");
+      }
     },
     getViewer: async () => {
       viewerPromise ??= (async () => {
@@ -179,22 +185,39 @@ export function createLinearTracker(options: {
       if (stateIdCache.has(cacheKey)) {
         return stateIdCache.get(cacheKey) ?? null;
       }
-      const payload = await requestGraphql(fetchImpl, options.endpoint, options.apiKey, {
-        query: WORKFLOW_STATES_QUERY,
-        variables: {},
-      });
-      const nodes = arrayValue(objectValue(objectValue(payload.data).workflowStates).nodes);
-      const match =
-        nodes
-          .map((node) => objectValue(node))
-          .find(
+      let cursor: string | null = null;
+      while (true) {
+        const payload = await requestGraphql(fetchImpl, options.endpoint, options.apiKey, {
+          query: WORKFLOW_STATES_QUERY,
+          variables: {
+            cursor,
+            first: 100,
+          },
+        });
+        const connection = workflowStatesConnection(payload);
+        const match =
+          connection.nodes.find(
             (node) =>
               nullableString(objectValue(node.team).id) === teamId &&
               extractStateName(node).toLowerCase() === stateName.trim().toLowerCase(),
           ) ?? null;
-      const stateId = match ? stringOrEmpty(match.id) || null : null;
-      stateIdCache.set(cacheKey, stateId);
-      return stateId;
+        if (match) {
+          const stateId = stringOrEmpty(match.id) || null;
+          stateIdCache.set(cacheKey, stateId);
+          return stateId;
+        }
+        if (!connection.pageInfo.hasNextPage) {
+          stateIdCache.set(cacheKey, null);
+          return null;
+        }
+        if (!connection.pageInfo.endCursor) {
+          throw new TrackerError(
+            "linear_missing_end_cursor",
+            "workflow state query reported hasNextPage without an end cursor",
+          );
+        }
+        cursor = connection.pageInfo.endCursor;
+      }
     },
   };
 }
@@ -241,6 +264,20 @@ function issuesConnection(payload: Record<string, unknown>): {
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 } {
   const connection = objectValue(objectValue(payload.data).issues);
+  return {
+    nodes: arrayValue(connection.nodes).map((node) => objectValue(node)),
+    pageInfo: {
+      hasNextPage: Boolean(objectValue(connection.pageInfo).hasNextPage),
+      endCursor: nullableString(objectValue(connection.pageInfo).endCursor),
+    },
+  };
+}
+
+function workflowStatesConnection(payload: Record<string, unknown>): {
+  nodes: Record<string, unknown>[];
+  pageInfo: { hasNextPage: boolean; endCursor: string | null };
+} {
+  const connection = objectValue(objectValue(payload.data).workflowStates);
   return {
     nodes: arrayValue(connection.nodes).map((node) => objectValue(node)),
     pageInfo: {
@@ -414,14 +451,18 @@ query Viewer {
 `;
 
 const WORKFLOW_STATES_QUERY = `
-query WorkflowStates {
-  workflowStates {
+query WorkflowStates($cursor: String, $first: Int!) {
+  workflowStates(first: $first, after: $cursor) {
     nodes {
       id
       name
       team {
         id
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
