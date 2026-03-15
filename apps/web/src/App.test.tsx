@@ -28,7 +28,7 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
 ];
 
 describe('App', () => {
-  it('renders positioning copy, lists specs, and supports detail/copy actions', () => {
+  it('renders positioning copy, lists specs, and supports copy actions', () => {
     const copyMock = vi.fn();
 
     render(<App specs={SAMPLE_SPECS} onCopyImplementPrompt={copyMock} />);
@@ -43,32 +43,18 @@ describe('App', () => {
       ),
     ).toBeInTheDocument();
 
-    expect(screen.getAllByRole('heading', { name: 'Harness Spec' })).toHaveLength(2);
+    expect(screen.getByRole('heading', { name: 'Harness Spec' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
     expect(screen.getAllByText('Source')).toHaveLength(2);
-    expect(screen.getByText('Origin')).toBeInTheDocument();
-    expect(screen.getAllByText('Synced date (UTC)')).toHaveLength(3);
-    expect(screen.getAllByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).toHaveLength(2);
-    expect(screen.getAllByText('2026-03-10T12:34:10Z')).toHaveLength(2);
-
-    fireEvent.click(screen.getByLabelText('View details for docs-blueprint'));
-    expect(screen.getAllByRole('heading', { name: 'Docs Blueprint' })).toHaveLength(2);
-    expect(screen.getAllByText('Generate canonical docs structure.')).toHaveLength(2);
-    expect(
-      screen.getByText(
-        (_, element) =>
-          element?.textContent ===
-          'This implement prompt tells an agent to copy the full specs/docs-blueprint directory, not just SPEC.md.',
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getAllByText('Unknown')).toHaveLength(4);
+    expect(screen.getAllByText('Synced date (UTC)')).toHaveLength(2);
+    expect(screen.getByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).toBeInTheDocument();
+    expect(screen.getByText('2026-03-10T12:34:10Z')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Selected spec details')).not.toBeInTheDocument();
+    expect(screen.queryByText('Selected spec')).not.toBeInTheDocument();
+    expect(screen.getByText('Generate canonical docs structure.')).toBeInTheDocument();
+    expect(screen.getAllByText('Unknown')).toHaveLength(2);
 
     fireEvent.click(screen.getByLabelText('Copy implement prompt for docs-blueprint'));
-    expect(copyMock).toHaveBeenCalledWith(
-      'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"` command and start implement that spec.',
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Copy selected implement prompt' }));
     expect(copyMock).toHaveBeenCalledWith(
       'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"` command and start implement that spec.',
     );

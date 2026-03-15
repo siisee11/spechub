@@ -28,14 +28,8 @@
   font-size: 1.05rem;
 }
 
-.layout {
-  margin-top: 1.25rem;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-}
-
 .spec-list {
+  margin-top: 1.25rem;
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.9rem;
@@ -101,10 +95,6 @@
   color: #11387a;
 }
 
-.metadata-list-detail {
-  margin-top: 0.75rem;
-}
-
 .install-command {
   margin: 0.5rem 0;
   padding: 0.65rem;
@@ -133,28 +123,9 @@ button:hover {
   background: #fff5c8;
 }
 
-.detail-panel {
-  border: 1px solid #1a1a1a;
-  background: #eff5ff;
-  padding: 1rem;
-}
-
-.detail-label {
-  margin: 0;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-}
-
 .empty-state {
   margin-top: 1.25rem;
   border: 1px dashed #1a1a1a;
   background: #ffffff;
   padding: 1rem;
-}
-
-@media (min-width: 900px) {
-  .layout {
-    grid-template-columns: 2fr 1fr;
-    align-items: start;
-  }
 }
