@@ -21,7 +21,7 @@ export type SpecCatalogEntry = {
   name: string;
   description: string;
   specPath: string;
-  installCommand: string;
+  implementPrompt: string;
   metadata?: SpecMetadata | null;
 };
 
@@ -81,6 +81,10 @@ export function buildInstallCommand(slug: string, repoSource?: RepoSource): stri
   return `REPO=owner/repo REF=main curl -fsSL "https://raw.githubusercontent.com/${'${REPO}'}/${'${REF}'}/scripts/install-spec.sh" | sh -s -- "${'${REPO}'}" "${'${REF}'}" "${slug}"`;
 }
 
+export function buildImplementPrompt(slug: string, repoSource?: RepoSource): string {
+  return `Download SPEC files by executing \`${buildInstallCommand(slug, repoSource)}\` command and start implement that spec.`;
+}
+
 export function buildSpecCatalog(
   specFiles: SpecMarkdownFile[],
   repoSource?: RepoSource,
@@ -99,7 +103,7 @@ export function buildSpecCatalog(
         name: parsed.name,
         description: parsed.description,
         specPath: `specs/${slug}`,
-        installCommand: buildInstallCommand(slug, repoSource),
+        implementPrompt: buildImplementPrompt(slug, repoSource),
         metadata: file.metadata ?? null,
       } satisfies SpecCatalogEntry;
     })

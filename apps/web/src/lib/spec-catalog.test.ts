@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_SPEC_DESCRIPTION,
+  buildImplementPrompt,
   buildInstallCommand,
   buildSpecCatalog,
   extractSpecSlugFromPath,
@@ -76,6 +77,19 @@ describe('buildInstallCommand', () => {
   });
 });
 
+describe('buildImplementPrompt', () => {
+  it('wraps the install command in a coding-agent prompt', () => {
+    const prompt = buildImplementPrompt('harness-spec', {
+      ownerRepo: 'siisee11/spechub',
+      ref: 'main',
+    });
+
+    expect(prompt).toBe(
+      'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/siisee11/spechub/main/scripts/install-spec.sh" | sh -s -- "siisee11/spechub" "main" "harness-spec"` command and start implement that spec.',
+    );
+  });
+});
+
 describe('buildSpecCatalog', () => {
   it('sorts entries and ignores invalid file paths', () => {
     const catalog = buildSpecCatalog(
@@ -111,8 +125,8 @@ describe('buildSpecCatalog', () => {
         name: 'alpha',
         description: DEFAULT_SPEC_DESCRIPTION,
         specPath: 'specs/alpha',
-        installCommand:
-          'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "alpha"',
+        implementPrompt:
+          'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "alpha"` command and start implement that spec.',
         metadata: {
           source: 'https://example.com/alpha',
           syncedDate: '2026-03-10T12:34:10Z',
@@ -123,8 +137,8 @@ describe('buildSpecCatalog', () => {
         name: 'Zeta',
         description: 'Zeta description.',
         specPath: 'specs/zeta',
-        installCommand:
-          'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "zeta"',
+        implementPrompt:
+          'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "zeta"` command and start implement that spec.',
         metadata: null,
       },
     ]);
@@ -150,8 +164,8 @@ describe('buildSpecCatalog', () => {
         name: 'No Metadata',
         description: 'Demo spec.',
         specPath: 'specs/no-metadata',
-        installCommand:
-          'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "no-metadata"',
+        implementPrompt:
+          'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "no-metadata"` command and start implement that spec.',
         metadata: null,
       },
     ]);

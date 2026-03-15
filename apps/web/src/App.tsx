@@ -2,18 +2,18 @@ import { useState } from 'react';
 import type { SpecCatalogEntry } from './lib/spec-catalog';
 import './App.css';
 
-export async function defaultCopyInstallCommand(command: string): Promise<void> {
-  await navigator.clipboard.writeText(command);
+export async function defaultCopyImplementPrompt(prompt: string): Promise<void> {
+  await navigator.clipboard.writeText(prompt);
 }
 
 type AppProps = {
   specs: SpecCatalogEntry[];
-  onCopyInstallCommand?: (command: string) => void | Promise<void>;
+  onCopyImplementPrompt?: (prompt: string) => void | Promise<void>;
 };
 
 export default function App({
   specs,
-  onCopyInstallCommand = defaultCopyInstallCommand,
+  onCopyImplementPrompt = defaultCopyImplementPrompt,
 }: AppProps) {
   const [selectedSpec, setSelectedSpec] = useState<SpecCatalogEntry | null>(specs[0] ?? null);
 
@@ -23,8 +23,8 @@ export default function App({
         <p className="eyebrow">COMMUNITY SPECS</p>
         <h1>SpecHub</h1>
         <p className="hero-copy">Open community marketplace for sharable specs.</p>
-        <p className="hero-copy">Browse repository-backed specs, inspect details, and copy install commands.</p>
-        <p className="hero-copy">Each install command downloads the full spec folder, including files next to <code>SPEC.md</code>.</p>
+        <p className="hero-copy">Browse repository-backed specs, inspect details, and copy implement prompts for your coding agent.</p>
+        <p className="hero-copy">Each implement prompt tells the agent how to download the full spec folder, including files next to <code>SPEC.md</code>.</p>
       </header>
 
       {specs.length === 0 ? (
@@ -65,7 +65,7 @@ export default function App({
                         </dd>
                       </div>
                     </dl>
-                    <pre className="install-command">{spec.installCommand}</pre>
+                    <pre className="install-command">{spec.implementPrompt}</pre>
                     <div className="actions">
                       <button
                         type="button"
@@ -79,11 +79,11 @@ export default function App({
                       <button
                         type="button"
                         onClick={() => {
-                          void onCopyInstallCommand(spec.installCommand);
+                          void onCopyImplementPrompt(spec.implementPrompt);
                         }}
-                        aria-label={`Copy install command for ${spec.slug}`}
+                        aria-label={`Copy implement prompt for ${spec.slug}`}
                       >
-                        Copy install command
+                        Copy implement prompt
                       </button>
                     </div>
                   </article>
@@ -118,17 +118,17 @@ export default function App({
                   </div>
                 </dl>
                 <p>
-                  Install commands copy the full <code>{detailSpec.specPath}</code> directory, not just <code>SPEC.md</code>.
+                  This implement prompt tells an agent to copy the full <code>{detailSpec.specPath}</code> directory, not just <code>SPEC.md</code>.
                 </p>
-                <h3>Install command</h3>
-                <pre className="install-command">{detailSpec.installCommand}</pre>
+                <h3>Implement prompt</h3>
+                <pre className="install-command">{detailSpec.implementPrompt}</pre>
                 <button
                   type="button"
                   onClick={() => {
-                    void onCopyInstallCommand(detailSpec.installCommand);
+                    void onCopyImplementPrompt(detailSpec.implementPrompt);
                   }}
                 >
-                  Copy selected install command
+                  Copy selected implement prompt
                 </button>
               </aside>
             </section>

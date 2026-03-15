@@ -153,7 +153,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
 });
 
 describe('loadSpecCatalogFromRepository', () => {
-  it('builds sorted catalog entries with install commands', async () => {
+  it('builds sorted catalog entries with implement prompts', async () => {
     const repoRoot = await createTempRepo();
 
     await mkdir(path.join(repoRoot, 'specs', 'z-spec'), { recursive: true });
@@ -179,8 +179,8 @@ describe('loadSpecCatalogFromRepository', () => {
     });
 
     expect(catalog.map((entry) => entry.slug)).toEqual(['a-spec', 'z-spec']);
-    expect(catalog[0]?.installCommand).toBe(
-      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "a-spec"',
+    expect(catalog[0]?.implementPrompt).toBe(
+      'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "a-spec"` command and start implement that spec.',
     );
     expect(catalog[0]?.metadata).toEqual({
       source: 'https://github.com/example/a-spec',
