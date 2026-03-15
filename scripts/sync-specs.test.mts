@@ -152,6 +152,55 @@ test("sync-specs replaces full vendored contents and refreshes provenance for re
   expect(upstreamMetadata).toContain("- `metadata.json` is repository-local discovery metadata.");
 });
 
+test("sync-specs prefers upstream spec directory over full-repo sync for repositories ending in .spec", async () => {
+  const repoRoot = await createTempRepo();
+  await createSpec(repoRoot, "nested-spec", {
+    metadataSource: "https://github.com/example/nested.spec",
+    files: {
+      "SPEC.md": "old spec\n",
+      "obsolete.md": "delete me\n",
+    },
+  });
+
+  const upstreamRoot = await createUpstreamRoot({
+    "SPEC.md": "root spec should be ignored\n",
+    "other.txt": "root file should be ignored\n",
+    "spec/SPEC.md": "nested spec\n",
+    "spec/notes.md": "nested notes\n",
+    "spec/assets/example.txt": "nested asset\n",
+  });
+
+  const results = await syncSpecs(repoRoot, {
+    slugs: ["nested-spec"],
+    now: () => new Date("2026-03-11T02:03:04.000Z"),
+    log: () => {},
+    downloadUpstreamRepository: async () => ({
+      root: upstreamRoot,
+      resolvedCommit: "1111111111111111111111111111111111111111",
+      cleanup: async () => {},
+    }),
+  });
+
+  expect(results).toEqual([
+    {
+      slug: "nested-spec",
+      ownerRepo: "example/nested.spec",
+      ref: "main",
+      mode: "spec-subdir",
+    },
+  ]);
+  expect(await readFile(join(repoRoot, "specs/nested-spec/SPEC.md"), "utf8")).toBe("nested spec\n");
+  expect(await readFile(join(repoRoot, "specs/nested-spec/notes.md"), "utf8")).toBe("nested notes\n");
+  expect(await readFile(join(repoRoot, "specs/nested-spec/assets/example.txt"), "utf8")).toBe("nested asset\n");
+  expect(readdir(join(repoRoot, "specs/nested-spec"))).resolves.not.toContain("obsolete.md");
+  expect(readdir(join(repoRoot, "specs/nested-spec"))).resolves.not.toContain("other.txt");
+
+  const upstreamMetadata = await readFile(join(repoRoot, "specs/nested-spec/UPSTREAM.md"), "utf8");
+  expect(upstreamMetadata).toContain("# nested.spec Upstream Metadata");
+  expect(upstreamMetadata).toContain("- `SPEC.md`: `https://github.com/example/nested.spec/blob/1111111111111111111111111111111111111111/spec/SPEC.md`");
+  expect(upstreamMetadata).toContain("- Upstream `spec/` directory copied into the corresponding `specs/<slug>/` directory.");
+});
+
 test("sync-specs refreshes selected upstream-managed files for non-.spec repositories and defaults ref to main", async () => {
   const repoRoot = await createTempRepo();
   await createSpec(repoRoot, "symphony", {
@@ -211,4 +260,52 @@ test("sync-specs refreshes selected upstream-managed files for non-.spec reposit
   expect(upstreamMetadata).toContain("- `NOTICE`: `https://github.com/openai/symphony/blob/abcdef1234567890abcdef1234567890abcdef12/NOTICE`");
   expect(upstreamMetadata).toContain("- Synced files: `SPEC.md`, `LICENSE`, `NOTICE`.");
   expect(upstreamMetadata).toContain("- `UPSTREAM.md` is repository-local provenance metadata.");
+});
+
+test("sync-specs mirrors upstream spec directory when non-.spec repositories expose spec/SPEC.md", async () => {
+  const repoRoot = await createTempRepo();
+  await createSpec(repoRoot, "product-spec", {
+    metadataSource: "https://github.com/example/product-app",
+    files: {
+      "SPEC.md": "old top-level spec\n",
+      "old.md": "remove me\n",
+    },
+  });
+
+  const upstreamRoot = await createUpstreamRoot({
+    "SPEC.md": "root-level spec should be ignored\n",
+    "spec/SPEC.md": "nested upstream spec\n",
+    "spec/notes.md": "nested notes\n",
+    "spec/assets/diagram.txt": "diagram\n",
+  });
+
+  const results = await syncSpecs(repoRoot, {
+    slugs: ["product-spec"],
+    now: () => new Date("2026-03-11T09:10:11.000Z"),
+    log: () => {},
+    downloadUpstreamRepository: async () => ({
+      root: upstreamRoot,
+      resolvedCommit: "fedcba9876543210fedcba9876543210fedcba98",
+      cleanup: async () => {},
+    }),
+  });
+
+  expect(results).toEqual([
+    {
+      slug: "product-spec",
+      ownerRepo: "example/product-app",
+      ref: "main",
+      mode: "spec-subdir",
+    },
+  ]);
+  expect(await readFile(join(repoRoot, "specs/product-spec/SPEC.md"), "utf8")).toBe("nested upstream spec\n");
+  expect(await readFile(join(repoRoot, "specs/product-spec/notes.md"), "utf8")).toBe("nested notes\n");
+  expect(await readFile(join(repoRoot, "specs/product-spec/assets/diagram.txt"), "utf8")).toBe("diagram\n");
+  expect(readdir(join(repoRoot, "specs/product-spec"))).resolves.not.toContain("old.md");
+
+  const upstreamMetadata = await readFile(join(repoRoot, "specs/product-spec/UPSTREAM.md"), "utf8");
+  expect(upstreamMetadata).toContain("# product-app Upstream Metadata");
+  expect(upstreamMetadata).toContain("- `SPEC.md`: `https://github.com/example/product-app/blob/fedcba9876543210fedcba9876543210fedcba98/spec/SPEC.md`");
+  expect(upstreamMetadata).toContain("- `notes.md`: `https://github.com/example/product-app/blob/fedcba9876543210fedcba9876543210fedcba98/spec/notes.md`");
+  expect(upstreamMetadata).toContain("- Upstream `spec/` directory copied into the corresponding `specs/<slug>/` directory.");
 });

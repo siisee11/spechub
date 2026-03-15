@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { cp, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -11,7 +11,7 @@ export type SyncResult = {
   slug: string;
   ownerRepo: string;
   ref: string;
-  mode: "full-repo" | "spec-only";
+  mode: "full-repo" | "spec-subdir" | "spec-only";
 };
 
 type Metadata = {
@@ -25,6 +25,8 @@ type DownloadedRepo = {
   resolvedCommit: string;
   cleanup: () => Promise<void>;
 };
+
+type SyncMode = "full-repo" | "spec-subdir" | "spec-only";
 
 type SyncDependencies = {
   downloadUpstreamRepository?: (options: { ownerRepo: string; ref: string }) => Promise<DownloadedRepo>;
@@ -83,11 +85,31 @@ export async function syncSingleSpec(
   const downloaded = await downloader({ ownerRepo, ref });
 
   try {
-    const mode = repoName.endsWith(".spec") ? "full-repo" : "spec-only";
-    const syncedFiles =
-      mode === "full-repo"
-        ? await replaceSpecDirectoryFromRepository(downloaded.root, specDir)
-        : await replaceSpecFilesFromRepository(downloaded.root, specDir);
+    const upstreamSpecDir = join(downloaded.root, "spec");
+    const hasUpstreamSpecDir = await pathExists(upstreamSpecDir);
+    let mode: SyncMode;
+    let syncedFiles: string[];
+    let upstreamCopyRoot: string;
+    let upstreamPathPrefix = "";
+
+    if (hasUpstreamSpecDir) {
+      const nestedSpecPath = join(upstreamSpecDir, "SPEC.md");
+      if (!(await pathExists(nestedSpecPath))) {
+        throw new Error(`missing spec/SPEC.md in upstream repository at ${downloaded.root}`);
+      }
+      mode = "spec-subdir";
+      upstreamCopyRoot = upstreamSpecDir;
+      upstreamPathPrefix = "spec/";
+      syncedFiles = await replaceSpecDirectoryFromRepository(upstreamSpecDir, specDir);
+    } else if (repoName.endsWith(".spec")) {
+      mode = "full-repo";
+      upstreamCopyRoot = downloaded.root;
+      syncedFiles = await replaceSpecDirectoryFromRepository(downloaded.root, specDir);
+    } else {
+      mode = "spec-only";
+      upstreamCopyRoot = downloaded.root;
+      syncedFiles = await replaceSpecFilesFromRepository(downloaded.root, specDir);
+    }
 
     await writeFile(
       join(specDir, "UPSTREAM.md"),
@@ -98,7 +120,9 @@ export async function syncSingleSpec(
         resolvedCommit: downloaded.resolvedCommit,
         mode,
         specDir,
-        upstreamRoot: downloaded.root,
+        upstreamCopyRoot,
+        upstreamRepoRoot: downloaded.root,
+        upstreamPathPrefix,
         syncedFiles,
         syncedAt: syncTime,
       }),
@@ -279,9 +303,11 @@ async function renderUpstreamMetadata(options: {
   repoName: string;
   ref: string;
   resolvedCommit: string;
-  mode: "full-repo" | "spec-only";
+  mode: SyncMode;
   specDir: string;
-  upstreamRoot: string;
+  upstreamCopyRoot: string;
+  upstreamRepoRoot: string;
+  upstreamPathPrefix: string;
   syncedFiles: string[];
   syncedAt: Date;
 }): Promise<string> {
@@ -291,7 +317,7 @@ async function renderUpstreamMetadata(options: {
       sha256: createHash("sha256").update(await readFile(join(options.specDir, relativePath))).digest("hex"),
     })),
   );
-  const licenseLine = (await pathExists(join(options.upstreamRoot, "LICENSE")))
+  const licenseLine = (await pathExists(join(options.upstreamRepoRoot, "LICENSE")))
     ? "top-level `LICENSE` file present at fetched commit."
     : "no top-level `LICENSE` file present at fetched commit.";
   const canonicalUrls =
@@ -300,10 +326,10 @@ async function renderUpstreamMetadata(options: {
           `- Repository root: \`https://github.com/${options.ownerRepo}/tree/${options.resolvedCommit}\``,
           `- Main spec: \`https://github.com/${options.ownerRepo}/blob/${options.resolvedCommit}/SPEC.md\``,
         ]
-      : options.syncedFiles.map(
-          (relativePath) =>
-            `- \`${relativePath}\`: \`https://github.com/${options.ownerRepo}/blob/${options.resolvedCommit}/${relativePath}\``,
-        );
+      : options.syncedFiles.map((relativePath) => {
+          const upstreamRelativePath = `${options.upstreamPathPrefix}${relativePath}`.replaceAll("//", "/");
+          return `- \`${relativePath}\`: \`https://github.com/${options.ownerRepo}/blob/${options.resolvedCommit}/${upstreamRelativePath}\``;
+        });
   const importMethodLines =
     options.mode === "full-repo"
       ? [
@@ -311,6 +337,12 @@ async function renderUpstreamMetadata(options: {
           "- Upstream git metadata (`.git/`) excluded.",
           "- Imported payload mirrors upstream tracked files at the resolved commit.",
         ]
+      : options.mode === "spec-subdir"
+        ? [
+            "- Upstream `spec/` directory copied into the corresponding `specs/<slug>/` directory.",
+            `- Synced files: ${options.syncedFiles.map((relativePath) => `\`${relativePath}\``).join(", ")}.`,
+            "- Repository-local metadata files are preserved.",
+          ]
       : [
           "- Selected upstream files copied into the corresponding `specs/<slug>/` directory.",
           `- Synced files: ${options.syncedFiles.map((relativePath) => `\`${relativePath}\``).join(", ")}.`,
@@ -386,7 +418,7 @@ async function listRelativeFiles(root: string, relative = ""): Promise<string[]>
 
 async function pathExists(path: string): Promise<boolean> {
   try {
-    await readFile(path);
+    await access(path);
     return true;
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT") {
