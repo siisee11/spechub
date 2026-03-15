@@ -6,29 +6,29 @@ This directory vendors third-party specification content from `siisee11/ralph-lo
 
 - Repository: `https://github.com/siisee11/ralph-loop.spec`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-15): `a065a67e8bbacdade21e0efe74433b0fd8918165`
+- Resolved commit at fetch time (2026-03-15): `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`
 - License in upstream repo: no top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs
 
-- `SPEC.md`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/SPEC.md`
-- `references/cmd/ralph-loop/main.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/cmd/ralph-loop/main.go`
-- `references/internal/ralphloop/agents.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/agents.go`
-- `references/internal/ralphloop/cli.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/cli.go`
-- `references/internal/ralphloop/codex_client.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/codex_client.go`
-- `references/internal/ralphloop/completion.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/completion.go`
-- `references/internal/ralphloop/events.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/events.go`
-- `references/internal/ralphloop/logger.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/logger.go`
-- `references/internal/ralphloop/ls.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/ls.go`
-- `references/internal/ralphloop/naming.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/naming.go`
-- `references/internal/ralphloop/orchestrator.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/orchestrator.go`
-- `references/internal/ralphloop/prompts.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/prompts.go`
-- `references/internal/ralphloop/sandbox.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/sandbox.go`
-- `references/internal/ralphloop/session.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/session.go`
-- `references/internal/ralphloop/tail.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/tail.go`
-- `references/internal/ralphloop/telemetry.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/telemetry.go`
-- `references/internal/ralphloop/worktree.go`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/internal/ralphloop/worktree.go`
-- `references/ralph-loop`: `https://github.com/siisee11/ralph-loop.spec/blob/a065a67e8bbacdade21e0efe74433b0fd8918165/spec/references/ralph-loop`
+- `SPEC.md`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/SPEC.md`
+- `references/cmd/ralph-loop/main.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/cmd/ralph-loop/main.go`
+- `references/internal/ralphloop/agents.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/agents.go`
+- `references/internal/ralphloop/cli.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/cli.go`
+- `references/internal/ralphloop/codex_client.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/codex_client.go`
+- `references/internal/ralphloop/completion.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/completion.go`
+- `references/internal/ralphloop/events.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/events.go`
+- `references/internal/ralphloop/logger.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/logger.go`
+- `references/internal/ralphloop/ls.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/ls.go`
+- `references/internal/ralphloop/naming.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/naming.go`
+- `references/internal/ralphloop/orchestrator.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/orchestrator.go`
+- `references/internal/ralphloop/prompts.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/prompts.go`
+- `references/internal/ralphloop/sandbox.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/sandbox.go`
+- `references/internal/ralphloop/session.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/session.go`
+- `references/internal/ralphloop/tail.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/tail.go`
+- `references/internal/ralphloop/telemetry.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/telemetry.go`
+- `references/internal/ralphloop/worktree.go`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/internal/ralphloop/worktree.go`
+- `references/ralph-loop`: `https://github.com/siisee11/ralph-loop.spec/blob/9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d/spec/references/ralph-loop`
 
 ## Import method
 
@@ -38,8 +38,8 @@ This directory vendors third-party specification content from `siisee11/ralph-lo
 
 ## Integrity hashes from imported files
 
-- `SPEC.md`: `faefcc8231ee5abe13839833956ea5f1e24a88237a9fedfe637b13c149986321`
-- `references/cmd/ralph-loop/main.go`: `11bf9d18a68f4e32fb1680690be0739894ac01dad4786d63ac16253c96ef45bc`
+- `SPEC.md`: `011fc21ffedba9356afdb9443eb0b92aab68f1485191ce29df01356aa49a111a`
+- `references/cmd/ralph-loop/main.go`: `805f7136af6cacaf5ddac8beffd54d6e5bc50f4ef78728893084d92bed72c3f0`
 - `references/internal/ralphloop/agents.go`: `1d24a5977abcea647ab9b7a8c45d74fb514ba830b1dd782fc4c13b5c7f384517`
 - `references/internal/ralphloop/cli.go`: `67672bcb09f1caa15f13a1c5b2b367d53164c17d08c1110da8e8ae90a6279e7f`
 - `references/internal/ralphloop/codex_client.go`: `0fbd6e889ffbe4852642d64049d5d23d831e11a6ace00e2b1e163e9a719436a2`
@@ -59,23 +59,23 @@ This directory vendors third-party specification content from `siisee11/ralph-lo
 
 ## Modification status
 
-- `SPEC.md`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/cmd/ralph-loop/main.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/agents.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/cli.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/codex_client.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/completion.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/events.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/logger.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/ls.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/naming.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/orchestrator.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/prompts.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/sandbox.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/session.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/tail.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/telemetry.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/internal/ralphloop/worktree.go`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
-- `references/ralph-loop`: unmodified copy of the upstream file at commit `a065a67e8bbacdade21e0efe74433b0fd8918165`.
+- `SPEC.md`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/cmd/ralph-loop/main.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/agents.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/cli.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/codex_client.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/completion.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/events.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/logger.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/ls.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/naming.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/orchestrator.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/prompts.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/sandbox.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/session.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/tail.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/telemetry.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/internal/ralphloop/worktree.go`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
+- `references/ralph-loop`: unmodified copy of the upstream file at commit `9fa51bc433e30fc8b19b3cb19acaabc40aa4b46d`.
 - `metadata.json` is repository-local discovery metadata.
 - `UPSTREAM.md` is repository-local provenance metadata.
