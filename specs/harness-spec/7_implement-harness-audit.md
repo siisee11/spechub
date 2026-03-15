@@ -81,7 +81,7 @@ harness/
 
 Each command should support env var overrides via `std::env::var` and invoke external tools via `std::process::Command`.
 
-Thin shell wrappers are allowed when they provide a stable operator entrypoint and delegate immediately into the Rust CLI. The canonical example is `scripts/harness/init.sh`, which should stay in strict mode and `exec` into `harnesscli init`.
+Harness operations should be exposed directly through `harnesscli` subcommands rather than separate shell wrapper entrypoints, so the CLI remains the single stable operator surface.
 
 ### `harnesscli smoke`
 
@@ -197,11 +197,10 @@ Fix any commands that fail due to missing tools or incorrect detection.
 | 9 | `docs/exec-plans/tech-debt-tracker.md` exists | file |
 | 10 | `docs/product-specs/index.md` exists | file |
 | 11 | `docs/product-specs/harness-demo-app.md` exists | file |
-| 12 | `scripts/harness/init.sh` exists | file |
-| 13 | `Makefile.harness` exists | file |
-| 14 | `harness/Cargo.toml` exists | file |
-| 15 | `harnesscli` CLI builds successfully | build |
-| 16 | `.github/workflows/harness.yml` exists | file |
+| 12 | `Makefile.harness` exists | file |
+| 13 | `harness/Cargo.toml` exists | file |
+| 14 | `harnesscli` CLI builds successfully | build |
+| 15 | `.github/workflows/harness.yml` exists | file |
 
 ### Directory existence
 

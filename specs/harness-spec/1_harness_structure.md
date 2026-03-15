@@ -56,7 +56,11 @@ This is the direction I want:
 ### Reference documents
 * When scaffolding `docs/references/`, copy the documentation-oriented contents of `create-harness/references/` into `docs/references/`.
 * These are pre-curated LLM-friendly reference files (e.g., `codex-app-server-llm.txt`) that give agents context about external tools, frameworks, and patterns used by the project.
-* If `create-harness/references/` also contains reference implementations such as `cmd/ralph-loop/`, `internal/ralphloop/`, or a repo-root `ralph-loop` shim, copy those into the matching repository path instead of under `docs/references/`.
+* Ralph Loop reference implementations now live in the public `ralph-loop.spec` repository:
+  `https://github.com/siisee11/ralph-loop.spec/tree/main/references`
+* Copy `https://github.com/siisee11/ralph-loop.spec/tree/main/references/cmd/ralph-loop`,
+  `https://github.com/siisee11/ralph-loop.spec/tree/main/references/internal/ralphloop`, and
+  `https://github.com/siisee11/ralph-loop.spec/blob/main/references/ralph-loop` into the matching repository paths instead of under `docs/references/`.
 * Add project-specific references over time as new dependencies or external integrations are introduced.
 
 ### Non-negotiable rules

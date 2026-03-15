@@ -6,13 +6,13 @@ This directory vendors third-party specification content from `siisee11/symphony
 
 - Repository: `https://github.com/siisee11/symphony-monitor.spec`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-15): `e5b0a64df2b7c85cf8dc07286ac3bf2ae9917f9b`
+- Resolved commit at fetch time (2026-03-15): `43e48faac68c28f5164005ce4713982075f54df0`
 - License in upstream repo: no top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs
 
-- Repository root: `https://github.com/siisee11/symphony-monitor.spec/tree/e5b0a64df2b7c85cf8dc07286ac3bf2ae9917f9b`
-- Main spec: `https://github.com/siisee11/symphony-monitor.spec/blob/e5b0a64df2b7c85cf8dc07286ac3bf2ae9917f9b/SPEC.md`
+- Repository root: `https://github.com/siisee11/symphony-monitor.spec/tree/43e48faac68c28f5164005ce4713982075f54df0`
+- Main spec: `https://github.com/siisee11/symphony-monitor.spec/blob/43e48faac68c28f5164005ce4713982075f54df0/SPEC.md`
 
 ## Import method
 
@@ -22,10 +22,12 @@ This directory vendors third-party specification content from `siisee11/symphony
 
 ## Integrity hashes from imported files
 
+- `README.md`: `8ad303c7da0b9c2ec158f9cc4240be3ddd004baee61a2fca293fdfd3e91da7ec`
 - `SPEC.md`: `50dac72d3bd9766560ea1269c2246b5e2714f63994a9c0b0c863bd428dc5f8ef`
+- `assets/symphony-monitor.png`: `5dac33f39299fb94e2ce08b50be0b3951834f643e980cf7b4be594a56b89c8af`
 
 ## Modification status
 
-- All files except `metadata.json` and `UPSTREAM.md` are unmodified copies of upstream tracked files at commit `e5b0a64df2b7c85cf8dc07286ac3bf2ae9917f9b`.
+- All files except `metadata.json` and `UPSTREAM.md` are unmodified copies of upstream tracked files at commit `43e48faac68c28f5164005ce4713982075f54df0`.
 - `metadata.json` is repository-local discovery metadata.
 - `UPSTREAM.md` is repository-local provenance metadata.

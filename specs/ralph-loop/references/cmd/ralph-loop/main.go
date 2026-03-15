@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/your-org/your-repo/internal/ralphloop"
+	"github.com/dev/ralph-loop.spec/internal/ralphloop"
 )
 
 func main() {

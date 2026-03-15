@@ -88,18 +88,17 @@ Expectations:
 - Startup should block until the app is actually ready, or fail clearly.
 - Add healthcheck logic rather than relying on blind sleeps.
 
-### C. Environment initialization entrypoint (`init.sh` + `harnesscli init`)
+### C. Environment initialization entrypoint (`harnesscli init`)
 
-Create `harnesscli init` as the system-of-record implementation for environment preparation, and expose `scripts/harness/init.sh` as a thin compatibility wrapper. This keeps the business logic testable inside Rust while preserving a stable shell entrypoint for Ralph Loop and other automation.
+Create `harnesscli init` as the system-of-record implementation for environment preparation. Keep the full initialization flow inside the Rust CLI so the behavior is testable, versioned, and exposed through a single stable interface.
 
 **Usage:**
 
 ```sh
-scripts/harness/init.sh [--base-branch <branch>] [--work-branch <name>]
 harnesscli init [--base-branch <branch>] [--work-branch <name>]
 ```
 
-**The script must perform the following steps in order:**
+**The command must perform the following steps in order:**
 
 1. **Create or reuse a git worktree**: If already inside a worktree, reuse it. Otherwise, create a new worktree using `git worktree add` from the specified base branch (default: `main`). Derive the worktree path using the same convention as `scripts/lib/worktree.sh`.
 
@@ -113,17 +112,9 @@ harnesscli init [--base-branch <branch>] [--work-branch <name>]
 
 6. **Create runtime directories**: Ensure `.worktree/<worktree_id>/logs/`, `.worktree/<worktree_id>/tmp/`, and other runtime dirs exist.
 
-The `scripts/harness/init.sh` wrapper should stay minimal:
-
-1. Resolve the repository root from any current directory.
-2. Build `harnesscli` if it is not already available.
-3. `exec` into `harnesscli init "$@"`.
-
-Do not duplicate the real initialization logic in both Rust and shell.
-
 **Output contract:**
 
-The script must print a JSON object to stdout on success:
+The command must print a JSON object to stdout on success:
 
 ```json
 {
@@ -140,13 +131,12 @@ The script must print a JSON object to stdout on success:
 **Requirements:**
 
 - Must be idempotent — running it twice on the same worktree is safe.
-- Must use `set -euo pipefail` (shell strict mode).
 - Must work from any directory (resolves repo root internally).
 - Must not require interactive input.
 - Exit code 0 on success, non-zero on any failure.
 - All output except the final JSON goes to stderr so the JSON can be parsed from stdout.
 
-**This script is reused by the Ralph Loop** (`ralph-loop.md`) as a deterministic replacement for the setup agent's environment preparation steps. The setup agent calls `init.sh` first, then only needs to create the execution plan.
+**This command is reused by the Ralph Loop** ([`https://github.com/siisee11/ralph-loop.spec/blob/main/SPEC.md`](https://github.com/siisee11/ralph-loop.spec/blob/main/SPEC.md)) as a deterministic replacement for the setup agent's environment preparation steps. The setup agent calls `harnesscli init` first, then only needs to create the execution plan.
 
 ### D. Reproducibility and validation flow
 
@@ -168,7 +158,6 @@ Please produce all of the following:
 1. **Implementation**
    - Code changes for worktree-aware booting
    - `harnesscli init` — environment initialization command with JSON output contract
-   - `scripts/harness/init.sh` — strict-mode wrapper that delegates to `harnesscli init`
    - Install and configure the `agent-browser` skill
 
 2. **Design note**

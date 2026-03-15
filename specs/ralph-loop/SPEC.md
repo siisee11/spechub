@@ -6,7 +6,7 @@ Build a Go CLI that drives a coding agent through a complete task lifecycle in a
 
 The Ralph Loop has three phases:
 
-1. **Setup Agent** — Runs `init.sh` to prepare a clean worktree, explores the codebase, and creates an execution plan.
+1. **Setup Agent** — Runs `ralph-loop init` to prepare a clean worktree, explores the codebase, and creates an execution plan.
 2. **Coding Agent Loop** — Iterates the coding agent with the user's prompt until the agent signals completion. Each iteration commits changes.
 3. **PR Agent** — Reads the commits and completed plan, then opens a pull request.
 
@@ -20,7 +20,7 @@ The Ralph Loop has three phases:
 │  │          │    │   COMPLETE)        │    │   → PR)    │       │
 │  └──────────┘    └────────────────────┘    └────────────┘       │
 │                                                                 │
-│  runs init.sh    commit per iteration      commits → PR         │
+│  runs init      commit per iteration       commits → PR         │
 │  explores repo   one milestone per turn                         │
 │  creates plan    <promise>COMPLETE</promise> = done             │
 │                  plan progress updated                          │
@@ -34,10 +34,10 @@ The Ralph Loop has three phases:
 Prefer a repo-root executable such as `./ralph-loop` as the user-facing command, even if the active implementation lives elsewhere.
 
 ```
+ralph-loop init [--base-branch <branch>] [--work-branch <name>] [--output <format>]
 ralph-loop "<user prompt>" [options]
-ralph-loop --prd [options]
-ralph-loop tail [selector] [--lines N] [--follow] [--raw]
-ralph-loop ls [selector]
+ralph-loop tail [selector] [--lines N] [--follow] [--raw] [--output <format>]
+ralph-loop ls [selector] [--output <format>]
 
 Options:
   --model <model>          Codex model to use (default: gpt-5.3-codex)
@@ -47,15 +47,172 @@ Options:
   --timeout <seconds>      Max wall-clock time for entire run (default: 21600 = 6h)
   --approval-policy <p>    Codex approval policy (default: never)
   --sandbox <policy>       Codex sandbox policy (default: workspace-write)
+  --output <format>        Output format: text, json, ndjson (default: text on TTY, json otherwise)
   --preserve-worktree      Keep the generated worktree on exit for debugging
-  --prd                    Read the task prompt from PRD.md at the repo root, then clear PRD.md
 ```
+
+### Machine-readable output
+
+Machine-readable output is a required CLI contract, not a debug-only feature.
+
+- Every command must support `--output text`, `--output json`, and `--output ndjson`.
+- When stdout is a TTY, default to `text`.
+- When stdout is not a TTY, default to `json`.
+- `text` is for human operators.
+- `json` emits exactly one JSON object for the full command result.
+- `ndjson` emits one JSON object per event or record and is the preferred format for streaming commands such as the main loop and `tail --follow`.
+- Errors must remain structured in `json` and `ndjson` modes. Do not fall back to prose-only stderr for machine-readable modes.
+- Shared fields such as `command`, `status`, `error`, `phase`, `iteration`, `event`, `ts`, `worktree_path`, and `work_branch` should keep stable names and meanings across commands.
+
+Recommended behavior:
+
+- `ralph-loop init --output json` returns a single object with worktree metadata, install/build status, runtime root, and any structured error.
+- `ralph-loop init` in default `text` mode still reserves stdout for the final success JSON object; progress and diagnostics go to stderr.
+- `ralph-loop init --output ndjson` may emit structured step events and must end with a terminal record containing the same metadata as the JSON mode success object.
+- `ralph-loop "<prompt>" --output json` returns a single object describing the run result, including final status, worktree metadata, iteration count, plan path, PR URL if created, and any structured error.
+- `ralph-loop "<prompt>" --output ndjson` streams lifecycle events as they happen and ends with a terminal event.
+- `ralph-loop ls --output json` returns a JSON array of running sessions.
+- `ralph-loop ls --output ndjson` emits one session object per line.
+- `ralph-loop tail --output json` returns the selected log metadata plus an array of lines or parsed records.
+- `ralph-loop tail --follow --output ndjson` emits one structured log or event record per line.
+
+Example NDJSON events:
+
+```json
+{"command":"main","event":"run.started","status":"running","ts":"2026-03-15T12:00:00Z","worktree_path":"/repo/.worktrees/ralph-foo","work_branch":"ralph-foo"}
+{"command":"main","event":"phase.started","phase":"setup","status":"running","ts":"2026-03-15T12:00:01Z"}
+{"command":"main","event":"iteration.completed","phase":"coding","iteration":1,"status":"ok","commit":"abc1234","ts":"2026-03-15T12:03:10Z"}
+{"command":"main","event":"run.completed","status":"completed","iterations":3,"plan_path":"/repo/docs/exec-plans/completed/foo.md","pr_url":"https://github.com/org/repo/pull/123","ts":"2026-03-15T12:14:22Z"}
+```
+
+Example structured error:
+
+```json
+{
+  "command": "main",
+  "status": "failed",
+  "error": {
+    "code": "setup_failed",
+    "message": "setup agent completed without the required completion token"
+  }
+}
+```
+
+---
+
+## Worktree-Aware Boot Architecture
+
+The repository must expose a worktree-aware app boot flow that lets one coding agent launch one isolated app instance per worktree or change.
+
+### Boot strategy
+
+- Provide one automation-safe boot entrypoint for the current worktree. This may be a dedicated script such as `scripts/harness/boot.sh` or a Ralph Loop subcommand such as `ralph-loop boot`, but the contract must be stable and documented.
+- The boot entrypoint must resolve the current repo root and current worktree internally so it can be run from any subdirectory.
+- Boot must block until the app is actually ready, or fail non-zero with a clear diagnostic. Blind sleeps are not acceptable.
+- Boot must prefer convention over configuration, but allow env var overrides for every derived runtime resource.
+
+### Worktree ID computation
+
+- Compute the worktree ID from the canonical absolute path of the current Git worktree.
+- Recommended algorithm:
+  1. Resolve the current worktree path with `git rev-parse --show-toplevel` plus `realpath`.
+  2. Take the basename of the worktree path as a human-readable prefix.
+  3. Append a short stable hash of the canonical path, for example `foo-a1b2c3d4`.
+- The worktree ID must remain stable across repeated boots from the same worktree path.
+- Allow an explicit override through `DISCODE_WORKTREE_ID`, but default to the derived value.
+
+### Resource assignment
+
+- Use `.worktree/<worktree_id>/` as the runtime root for per-worktree state.
+- Isolate at least these resources under that root:
+  - Logs
+  - Temp files
+  - Runtime metadata / lock files
+  - Local databases or SQLite files if the app uses them
+  - Browser profile or user data directories if the app launches a browser
+- Derive ports deterministically from the worktree ID so repeated boots for the same worktree choose the same defaults.
+- Recommended strategy:
+  - `offset = hash(worktree_id) % 1000`
+  - `app_port = APP_PORT_BASE + offset * 2`
+  - `ws_port = WS_PORT_BASE + offset * 2 + 1`
+- Allow explicit overrides through env vars such as `PORT`, `APP_PORT`, `WS_PORT`, `DISCODE_APP_PORT`, and `DISCODE_WS_PORT`.
+
+### Cleanup and reuse
+
+- Persist boot metadata under `.worktree/<worktree_id>/run/`, including the chosen ports, PID, URLs, and healthcheck information.
+- If the boot command detects a healthy app process already running for the same worktree and same runtime manifest, it may reuse that instance and return the existing metadata.
+- On clean shutdown, remove stale lock files and transient temp files but preserve logs.
+- On startup, opportunistically clean up stale runtime metadata whose PID is no longer alive.
+
+### Failure handling
+
+- If a derived port is already occupied by a different process, probe the next deterministic candidate in a bounded range.
+- If no candidate is available in the allowed range, fail non-zero with a diagnostic that names the attempted ports.
+- If a required runtime resource cannot be created, fail fast and report the exact path or resource that failed.
+- If boot times out waiting for readiness, report the last readiness check status and the runtime root / log path.
+
+## Coding Agent Launch Contract
+
+Ralph Loop depends on a stable boot contract so the coding agent can launch exactly one app instance per worktree.
+
+- Provide a command or script intended for automation use.
+- Startup must block until the app is actually ready.
+- Readiness must use a real healthcheck or equivalent probe rather than a fixed sleep.
+- The command must return enough metadata for downstream tooling. At minimum:
+  - `app_url`
+  - `selected_port`
+  - `healthcheck_url`
+  - `healthcheck_status`
+  - `worktree_id`
+  - `runtime_root`
+  - `observability_url` or `observability_base` when observability is started alongside boot
+- The response should be machine-readable JSON on success.
+- All non-JSON progress logs should go to stderr so downstream tooling can parse stdout.
+
+## Environment Initialization Entrypoint (`ralph-loop init`)
+
+Create a first-class environment preparation command:
+
+```sh
+ralph-loop init [--base-branch <branch>] [--work-branch <name>]
+```
+
+The command must perform the following steps in order:
+
+1. **Create or reuse a git worktree**: If already inside a worktree, reuse it. Otherwise, create a new worktree using `git worktree add` from the specified base branch (default: `main`). Derive the worktree path using the same convention as `scripts/lib/worktree.sh`.
+2. **Clean git state**: Inside the worktree, ensure a clean working tree. Stash any uncommitted changes. Create and checkout the work branch if specified.
+3. **Install dependencies**: Run the project's package install or fetch commands. Detect the project type from files such as `package.json`, `bun.lockb`, `Cargo.toml`, or equivalent. Fail clearly if install fails.
+4. **Verify build**: Run `make smoke` if `Makefile.harness` exists. Otherwise, run the project's default build or smoke command. If verification fails, exit non-zero with a diagnostic message.
+5. **Set up environment config**: If `.env.example` exists and `.env` does not, copy it. Set `DISCODE_WORKTREE_ID` and any other worktree-derived env vars required by the project.
+6. **Create runtime directories**: Ensure `.worktree/<worktree_id>/logs/`, `.worktree/<worktree_id>/tmp/`, and any other runtime dirs needed by boot or observability exist.
+
+Success output must be a JSON object printed to stdout:
+
+```json
+{
+  "worktree_id": "<derived_id>",
+  "worktree_path": "<absolute_path_to_worktree>",
+  "work_branch": "<branch_name>",
+  "base_branch": "<base_branch>",
+  "deps_installed": true,
+  "build_verified": true,
+  "runtime_root": ".worktree/<worktree_id>/"
+}
+```
+
+Additional requirements:
+
+- The command must be idempotent. Running it twice on the same worktree is safe.
+- It must work from any directory and resolve the repo root internally.
+- It must not require interactive input.
+- Exit code `0` on success and non-zero on any failure.
+- All output except the final success JSON goes to stderr so stdout remains parseable.
 
 ---
 
 ## Phase 1: Setup Agent
 
-Spawn a Codex agent via app-server with the following task prompt. This agent runs once, not in a loop. It initializes the environment using `init.sh` and then creates an execution plan.
+Spawn a Codex agent via app-server with the following task prompt. This agent runs once, not in a loop. It initializes the environment using `ralph-loop init` and then creates an execution plan.
 
 ### Setup agent prompt
 
@@ -66,7 +223,7 @@ Task: {user_prompt}
 
 Do the following steps in order:
 
-1. **Initialize the environment**: Run `scripts/harness/init.sh --base-branch {base_branch} --work-branch {work_branch}`. This script creates a clean worktree, installs dependencies, verifies the build, and sets up environment config. It outputs JSON to stdout — capture and verify it succeeds. If it fails, diagnose the error and retry once. If it fails again, stop and report the error.
+1. **Initialize the environment**: Run `./ralph-loop init --base-branch {base_branch} --work-branch {work_branch}`. This command creates or reuses the worktree, installs dependencies, verifies the build, prepares runtime directories, and outputs JSON to stdout. Capture and verify it succeeds. If it fails, diagnose the error and retry once. If it fails again, stop and report the error.
 
 2. **Explore the codebase**: Read `AGENTS.md`, `ARCHITECTURE.md`, and any relevant docs to understand the project structure and conventions.
 
@@ -92,6 +249,7 @@ Output <promise>COMPLETE</promise> when done.
 - Send `initialize` → `initialized` → `thread/start` → `turn/start` with the setup prompt.
 - Stream events and wait for `turn/completed`.
 - Parse the plan file path from the agent's output.
+- Parse the `ralph-loop init` success JSON to obtain the worktree path, worktree ID, work branch, base branch, and runtime root for later phases.
 - If the agent fails or the turn completes without `<promise>COMPLETE</promise>`, abort with an error.
 
 ---
@@ -346,16 +504,26 @@ The built harness also benefited from:
 
 ### Worktree management
 
-- The setup agent calls `scripts/harness/init.sh`, which may build and then delegate to `harnesscli init`.
-- The loop driver parses the JSON output from `init.sh` and sets `cwd` for subsequent Codex threads.
+- `ralph-loop init` is the canonical environment-preparation entrypoint.
+- The loop driver parses the JSON output from `ralph-loop init` and sets `cwd` for subsequent Codex threads.
+- Worktree-derived runtime paths must live under `.worktree/<worktree_id>/`.
 - Clean up the worktree after the PR is created, unless `--preserve-worktree` is set for debugging.
 
 ### Logging
 
 - Log all Codex events to `.worktree/<worktree_id>/logs/ralph-loop.log`.
-- Print high-level status to stdout: phase transitions, iteration counts, commit hashes, completion signal, PR URL.
+- Print high-level status to stdout in `text` mode: phase transitions, iteration counts, commit hashes, completion signal, PR URL.
+- In `json` and `ndjson` modes, write structured stdout instead of human log lines.
 - On failure, print the last N lines of the log for debugging.
 - Treat log writes as best-effort only; logging must never crash the loop runner.
+
+### Output architecture
+
+- Implement a shared renderer for `text`, `json`, and `ndjson` so every command uses the same output contract.
+- Do not require environment variables for structured stdout. Environment-gated debug event streams are acceptable as internal diagnostics, but the user-facing interface must be `--output`.
+- In `ndjson` mode, emit each record on a single line with no prefixes or wrappers.
+- In `json` mode, buffer command progress internally and emit exactly one final object.
+- Keep stderr human-oriented only in `text` mode. In machine-readable modes, encode errors in stdout JSON and keep stderr empty unless the process itself cannot initialize.
 
 ### Integration with harness
 
@@ -369,24 +537,36 @@ The built harness also benefited from:
 - [ ] `cmd/ralph-loop/main.go` active CLI entrypoint
 - [ ] `internal/ralphloop/` package with reusable orchestration modules
 - [ ] Stable repo-root `./ralph-loop` shim
+- [ ] `ralph-loop init` subcommand with the documented JSON stdout contract
+- [ ] Worktree-aware boot architecture and automation-safe boot command contract
 - [ ] App-server stdio JSON-RPC client
 - [ ] Setup-agent orchestration
 - [ ] Coding-loop orchestration with completion detection
 - [ ] PR-agent orchestration
-- [ ] Worktree/init integration that parses the `init.sh` JSON contract
+- [ ] Worktree/init integration that parses the `ralph-loop init` JSON contract
 - [ ] Structured log file under `.worktree/<id>/logs/ralph-loop.log`
+- [ ] Shared `--output text|json|ndjson` contract across `main`, `ls`, and `tail`
+- [ ] Structured JSON errors in machine-readable modes
 - [ ] Tests for CLI parsing, app-server client behavior, completion detection, and prompt construction
+- [ ] Tests covering `json` and `ndjson` output contracts, including non-TTY defaulting
 - [ ] `Makefile.harness` target for `ralph-loop`
 
 ---
 
 ## Verification
 
-1. Run `ralph-loop "Add a health check endpoint that returns { status: 'ok', uptime: <seconds> }"` on the repository.
-2. Confirm the setup agent creates a clean worktree, installs deps, and produces a plan.
-3. Confirm the coding agent iterates, commits per iteration, and eventually outputs `<promise>COMPLETE</promise>`.
-4. Confirm the PR agent opens a well-formed PR with the plan summary.
-5. Confirm the worktree is cleaned up after completion.
+1. Run `ralph-loop init --base-branch main --work-branch ralph-init-smoke` from outside the repo root and confirm it succeeds.
+2. Confirm `ralph-loop init` returns valid JSON on stdout and sends progress logs to stderr only.
+3. Confirm running `ralph-loop init` twice on the same worktree is safe and returns the same `worktree_id` and `runtime_root`.
+4. Confirm the boot command for the current worktree returns app metadata, blocks until healthy, and isolates ports and runtime files per worktree.
+5. Run `ralph-loop "Add a health check endpoint that returns { status: 'ok', uptime: <seconds> }"` on the repository.
+6. Confirm the setup agent creates or reuses a clean worktree, installs deps, verifies the build, and produces a plan.
+7. Confirm the coding agent iterates, commits per iteration, and eventually outputs `<promise>COMPLETE</promise>`.
+8. Confirm the PR agent opens a well-formed PR with the plan summary.
+9. Confirm the worktree is cleaned up after completion.
+10. Confirm `ralph-loop ls --output json` returns valid JSON.
+11. Confirm `ralph-loop tail --follow --output ndjson` emits one JSON object per line.
+12. Confirm piping `ralph-loop "<prompt>"` without `--output` defaults to structured JSON rather than text.
 
 ---
 
