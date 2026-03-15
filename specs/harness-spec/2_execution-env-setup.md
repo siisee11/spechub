@@ -81,19 +81,22 @@ Expectations:
 - It should return enough metadata for downstream tooling, such as:
   - App URL
   - Selected port
-  - Healthcheck status
+  - Healthcheck URL / status
   - Worktree ID
+  - Runtime root
+  - Observability URL or query base when observability is started alongside boot
 - Startup should block until the app is actually ready, or fail clearly.
 - Add healthcheck logic rather than relying on blind sleeps.
 
-### C. Environment initialization script (`init.sh`)
+### C. Environment initialization entrypoint (`init.sh` + `harnesscli init`)
 
-Create `scripts/harness/init.sh` — a single, idempotent script that prepares a clean, isolated environment for a coding agent to start working. This script is the foundation for the Ralph Loop's setup phase and can also be used standalone.
+Create `harnesscli init` as the system-of-record implementation for environment preparation, and expose `scripts/harness/init.sh` as a thin compatibility wrapper. This keeps the business logic testable inside Rust while preserving a stable shell entrypoint for Ralph Loop and other automation.
 
 **Usage:**
 
 ```sh
 scripts/harness/init.sh [--base-branch <branch>] [--work-branch <name>]
+harnesscli init [--base-branch <branch>] [--work-branch <name>]
 ```
 
 **The script must perform the following steps in order:**
@@ -102,13 +105,21 @@ scripts/harness/init.sh [--base-branch <branch>] [--work-branch <name>]
 
 2. **Clean git state**: Inside the worktree, ensure a clean working tree. Stash any uncommitted changes. Create and checkout the work branch if specified.
 
-3. **Install dependencies**: Run the project's package install command (detect `package.json` → `npm install`, `Cargo.toml` → `cargo build`, etc.). Fail clearly if install fails.
+3. **Install dependencies**: Run the project's package install or fetch commands (detect `package.json` → `npm install`/`bun install`, `Cargo.toml` → `cargo fetch`/`cargo build`, etc.). Fail clearly if install fails.
 
 4. **Verify build**: Run `make smoke` if `Makefile.harness` exists, otherwise attempt the project's default build command. If the build fails, exit non-zero with a diagnostic message.
 
 5. **Set up environment config**: If `.env.example` exists and `.env` does not, copy it. Set `DISCODE_WORKTREE_ID` and any other worktree-derived env vars.
 
 6. **Create runtime directories**: Ensure `.worktree/<worktree_id>/logs/`, `.worktree/<worktree_id>/tmp/`, and other runtime dirs exist.
+
+The `scripts/harness/init.sh` wrapper should stay minimal:
+
+1. Resolve the repository root from any current directory.
+2. Build `harnesscli` if it is not already available.
+3. `exec` into `harnesscli init "$@"`.
+
+Do not duplicate the real initialization logic in both Rust and shell.
 
 **Output contract:**
 
@@ -156,7 +167,8 @@ Please produce all of the following:
 
 1. **Implementation**
    - Code changes for worktree-aware booting
-   - `scripts/harness/init.sh` — environment initialization script with JSON output contract
+   - `harnesscli init` — environment initialization command with JSON output contract
+   - `scripts/harness/init.sh` — strict-mode wrapper that delegates to `harnesscli init`
    - Install and configure the `agent-browser` skill
 
 2. **Design note**

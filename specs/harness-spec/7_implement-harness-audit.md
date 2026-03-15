@@ -66,6 +66,8 @@ harness/
     ├── main.rs          # CLI entrypoint, clap App definition
     ├── cmd/
     │   ├── mod.rs
+    │   ├── init.rs      # harnesscli init
+    │   ├── boot.rs      # harnesscli boot {start,stop,status}
     │   ├── smoke.rs     # harnesscli smoke
     │   ├── test.rs      # harnesscli test
     │   ├── lint.rs      # harnesscli lint
@@ -78,6 +80,8 @@ harness/
 ```
 
 Each command should support env var overrides via `std::env::var` and invoke external tools via `std::process::Command`.
+
+Thin shell wrappers are allowed when they provide a stable operator entrypoint and delegate immediately into the Rust CLI. The canonical example is `scripts/harness/init.sh`, which should stay in strict mode and `exec` into `harnesscli init`.
 
 ### `harnesscli smoke`
 
@@ -185,23 +189,27 @@ Fix any commands that fail due to missing tools or incorrect detection.
 | 1 | `AGENTS.md` exists | file |
 | 2 | `ARCHITECTURE.md` exists | file |
 | 3 | `NON_NEGOTIABLE_RULES.md` exists | file |
-| 3 | `docs/PLANS.md` exists | file |
-| 4 | `docs/design-docs/index.md` exists | file |
-| 5 | `docs/exec-plans/tech-debt-tracker.md` exists | file |
-| 6 | `docs/product-specs/index.md` exists | file |
-| 7 | `Makefile.harness` exists | file |
-| 8 | `harness/Cargo.toml` exists | file |
-| 9 | `harnesscli` CLI builds successfully | build |
-| 10 | `.github/workflows/harness.yml` exists | file |
+| 4 | `docs/PLANS.md` exists | file |
+| 5 | `docs/design-docs/index.md` exists | file |
+| 6 | `docs/design-docs/local-operations.md` exists | file |
+| 7 | `docs/design-docs/worktree-isolation.md` exists | file |
+| 8 | `docs/design-docs/observability-shim.md` exists | file |
+| 9 | `docs/exec-plans/tech-debt-tracker.md` exists | file |
+| 10 | `docs/product-specs/index.md` exists | file |
+| 11 | `docs/product-specs/harness-demo-app.md` exists | file |
+| 12 | `scripts/harness/init.sh` exists | file |
+| 13 | `Makefile.harness` exists | file |
+| 14 | `harness/Cargo.toml` exists | file |
+| 15 | `harnesscli` CLI builds successfully | build |
+| 16 | `.github/workflows/harness.yml` exists | file |
 
 ### Directory existence
 
 | # | Check | Type |
 |---|---|---|
-| 14 | `docs/design-docs/` exists | directory |
-| 15 | `docs/exec-plans/active/` exists | directory |
-| 16 | `docs/exec-plans/completed/` exists | directory |
-| 17 | `docs/product-specs/` exists | directory |
-| 18 | `docs/references/` exists | directory |
-| 19 | `docs/generated/` exists | directory |
-
+| 17 | `docs/design-docs/` exists | directory |
+| 18 | `docs/exec-plans/active/` exists | directory |
+| 19 | `docs/exec-plans/completed/` exists | directory |
+| 20 | `docs/product-specs/` exists | directory |
+| 21 | `docs/references/` exists | directory |
+| 22 | `docs/generated/` exists | directory |

@@ -34,7 +34,7 @@ The [`harness-scaffolding-checklist.md`](./harness-scaffolding-checklist.md) tra
 
 ## Key Constraints
 
-- **Single Rust CLI.** All harness tooling ships as subcommands of `harnesscli`. No standalone shell scripts.
+- **Single Rust harness system of record.** Harness behavior should live in `harnesscli` subcommands. Thin wrappers such as `scripts/harness/init.sh` or a repo-root `./ralph-loop` shim are allowed only when they immediately delegate into versioned CLI code.
 - **Every command has a test.** Tests live as `#[cfg(test)]` modules or under `harness/tests/`.
 - **Worktree isolation.** All runtime resources (ports, temp dirs, data dirs, logs) are derived from a deterministic worktree ID.
 - **No blind sleeps.** Readiness is healthcheck-based.

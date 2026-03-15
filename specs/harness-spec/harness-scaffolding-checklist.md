@@ -16,10 +16,14 @@ This phase sets up the documentation hierarchy:
 - [ ] `docs/PLANS.md`
 - [ ] `docs/design-docs/index.md`
 - [ ] `docs/design-docs/core-beliefs.md` — product beliefs + agent-first operating principles (see `harness_structure.md`)
+- [ ] `docs/design-docs/local-operations.md` — local commands, env vars, and troubleshooting for humans and agents
+- [ ] `docs/design-docs/worktree-isolation.md` — worktree ID derivation, runtime roots, cleanup, and failure handling
+- [ ] `docs/design-docs/observability-shim.md` — telemetry architecture and query contract
 - [ ] `docs/exec-plans/active/`
 - [ ] `docs/exec-plans/completed/`
 - [ ] `docs/exec-plans/tech-debt-tracker.md`
 - [ ] `docs/product-specs/index.md`
+- [ ] `docs/product-specs/harness-demo-app.md` — deterministic demo surface used for browser validation
 - [ ] `docs/references/` — copy contents from `create-harness/references/` as seed
 - [ ] `docs/generated/`
 
@@ -28,7 +32,7 @@ Key rules:
 - Real source of truth lives in `docs/` and top-level documents, not in `AGENTS.md`.
 - Prefer many small, maintainable documents over one giant document.
 - Documentation must reflect real code and real operating practices.
-- **All harness tooling is a single Rust CLI** called `harnesscli`. Shell scripts are not allowed — implement all commands as subcommands of the `harnesscli` binary (e.g., `harnesscli smoke`, `harnesscli cleanup scan`, `harnesscli observability start`).
+- **All harness behavior lives in a single Rust CLI** called `harnesscli`. Thin shell wrappers are allowed only as stable entrypoints that immediately delegate to `harnesscli` or another versioned harness executable.
 - **Every command must have a corresponding test.** Tests live alongside the Rust source as `#[cfg(test)]` modules or in integration test files under `harness/tests/`.
 
 ---
@@ -42,9 +46,10 @@ This phase makes the app bootable per Git worktree for isolated development:
 - [ ] Worktree-aware boot flow with derived worktree ID
 - [ ] Isolated runtime resources per worktree (ports, temp dirs, logs, etc.)
 - [ ] Single command to boot the app for the current worktree
-- [ ] Launch contract returning metadata (app URL, port, healthcheck status, worktree ID)
+- [ ] Launch contract returning metadata (`app_url`, `port`, `healthcheck_url`, `worktree_id`, `runtime_root`, and observability metadata when available)
 - [ ] Healthcheck-based readiness (no blind sleeps)
-- [ ] `scripts/harness/init.sh` — idempotent environment initialization with JSON output contract
+- [ ] `harnesscli init` — idempotent environment initialization with JSON output contract
+- [ ] `scripts/harness/init.sh` — thin strict-mode wrapper entrypoint for automation compatibility
 - [ ] `agent-browser` skill installed for UI investigation
 - [ ] Example reproducibility and validation flow
 
@@ -110,16 +115,13 @@ Apply the instructions in [`6_ralph-loop.md`](./6_ralph-loop.md).
 
 This phase builds the automated coding agent loop that drives a task from prompt to pull request:
 
-- [ ] `scripts/ralph-loop/ralph-loop.mts` — main entry point with CLI parsing
-- [ ] `scripts/ralph-loop/lib/codex-client.mts` — Codex app-server stdio JSON-RPC client
-- [ ] `scripts/ralph-loop/lib/setup-agent.mts` — Phase 1: clean worktree, install deps, create execution plan
-- [ ] `scripts/ralph-loop/lib/coding-loop.mts` — Phase 2: iterative coding loop with `<promise>COMPLETE</promise>` detection
-- [ ] `scripts/ralph-loop/lib/pr-agent.mts` — Phase 3: read commits + plan, open pull request
-- [ ] `scripts/ralph-loop/lib/completion.mts` — completion signal detection utility
-- [ ] `scripts/ralph-loop/lib/worktree.mts` — parses worktree info from setup agent output, handles cleanup
-- [ ] `package.json` script entry for `ralph-loop`
+- [ ] Go `ralph-loop` CLI entrypoint under `cmd/ralph-loop/`
+- [ ] Reusable Go Ralph Loop modules under `internal/ralphloop/`
+- [ ] Repo-root `./ralph-loop` shim that delegates to the active implementation
+- [ ] Setup, coding-loop, PR, completion-detection, and worktree-init modules
+- [ ] Optional `tail`/`ls` operational subcommands for inspecting active sessions and logs
 - [ ] `Makefile.harness` target for `ralph-loop`
-- [ ] Tests for codex-client, completion detection, and prompt construction
+- [ ] Tests for CLI parsing, app-server client behavior, completion detection, and prompt construction
 - [ ] End-to-end verification: prompt → worktree → plan → coding iterations → commits → PR
 
 ---
@@ -136,8 +138,10 @@ This is the final phase — it verifies everything from all prior phases is wire
 - [ ] `harnesscli test` — full test suite
 - [ ] `harnesscli lint` — static analysis
 - [ ] `harnesscli typecheck` — type checking
+- [ ] `harnesscli init`, `harnesscli boot`, and `harnesscli observability` command groups implemented
 - [ ] `harnesscli audit` — audits all files and directories exist
 - [ ] `harness/Cargo.toml` — Rust crate for the `harnesscli` CLI
+- [ ] `scripts/harness/init.sh` — strict-mode compatibility wrapper that delegates to `harnesscli init`
 - [ ] `.github/workflows/harness.yml` — CI workflow running `make ci`
 - [ ] `harnesscli` CLI builds successfully (`cargo build --release -p harness`)
 - [ ] `harness audit .` passes

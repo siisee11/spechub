@@ -1,6 +1,6 @@
 # Implement the Ralph Loop
 
-Build a script that drives a coding agent through a complete task lifecycle in an automated loop. The script uses Codex app-server (via stdio JSON-RPC) to spawn and control agents. The name comes from the "Ralph Wiggum Loop" pattern: the agent keeps working until it declares the task complete.
+Build a Go CLI that drives a coding agent through a complete task lifecycle in an automated loop. The CLI uses Codex app-server (via stdio JSON-RPC) to spawn and control agents. The name comes from the "Ralph Wiggum Loop" pattern: the agent keeps working until it declares the task complete.
 
 ## Overview
 
@@ -31,18 +31,23 @@ The Ralph Loop has three phases:
 
 ## Interface
 
+Prefer a repo-root executable such as `./ralph-loop` as the user-facing command, even if the active implementation lives elsewhere.
+
 ```
 ralph-loop "<user prompt>" [options]
 ralph-loop --prd [options]
+ralph-loop tail [selector] [--lines N] [--follow] [--raw]
+ralph-loop ls [selector]
 
 Options:
   --model <model>          Codex model to use (default: gpt-5.3-codex)
   --base-branch <branch>   Branch to create the worktree from (default: main)
   --max-iterations <n>     Safety cap on coding loop iterations (default: 20)
-  --work-branch <name>     Name for the working branch (default: ralph/<slugified-prompt>)
+  --work-branch <name>     Name for the working branch (default: ralph-<slugified-prompt>)
   --timeout <seconds>      Max wall-clock time for entire run (default: 21600 = 6h)
   --approval-policy <p>    Codex approval policy (default: never)
   --sandbox <policy>       Codex sandbox policy (default: workspace-write)
+  --preserve-worktree      Keep the generated worktree on exit for debugging
   --prd                    Read the task prompt from PRD.md at the repo root, then clear PRD.md
 ```
 
@@ -288,25 +293,40 @@ Compatibility note:
 
 ## Implementation Notes
 
-### Script structure
+### Implementation structure
 
-Implement as a Node.js script (TypeScript) under `scripts/ralph-loop/`:
+Implement Ralph Loop in Go. The built harness in this repository landed on a Go Ralph Loop with a repo-root shim, and that is the only version this spec now considers.
 
-```
-scripts/ralph-loop/
-├── ralph-loop.mts          # Main entry point, CLI argument parsing
-├── lib/
-│   ├── codex-client.mts    # App-server stdio client (spawn, send, receive)
-│   ├── setup-agent.mts     # Phase 1 logic
-│   ├── coding-loop.mts     # Phase 2 logic
-│   ├── pr-agent.mts        # Phase 3 logic
-│   ├── completion.mts      # <promise>COMPLETE</promise> detection
-│   └── worktree.mts        # Calls init.sh, parses output, handles cleanup
+Prefer this split:
+
+```text
+./ralph-loop                 # repo-root shim; stable operator entrypoint
+cmd/ralph-loop/              # active CLI entrypoint
+internal/ralphloop/          # reusable orchestration, client, logging, tail/ls helpers
 ```
 
-A reference implementation is available under `create-harness/references/scripts/ralph-loop/`. Copy it into `scripts/ralph-loop/` as a starting point, then adapt it to the target repository's CLI, prompts, and verification flow.
+Use the provided Go reference implementation under:
 
-### The codex-client module
+- `create-harness/references/cmd/ralph-loop/`
+- `create-harness/references/internal/ralphloop/`
+- `create-harness/references/ralph-loop`
+
+Copy those into the matching repository paths, then adapt them to the target repository's Go module path, prompts, verification flow, and CI wiring.
+
+### Core modules
+
+Keep the Go implementation split into focused modules:
+
+- CLI parsing and option normalization
+- Codex app-server JSON-RPC client
+- setup-agent orchestration
+- coding-loop orchestration
+- PR-agent orchestration
+- completion detection
+- worktree/init integration
+- log tailing and active-session listing if you expose operational subcommands
+
+### The app-server client
 
 This is the core integration. It should:
 
@@ -314,55 +334,49 @@ This is the core integration. It should:
 - Send JSON-RPC messages as newline-delimited JSON to stdin.
 - Read JSON-RPC messages line-by-line from stdout.
 - Track request IDs and resolve promises on matching responses.
-- Emit events for notifications (turn/started, item/completed, etc.).
+- Emit events for notifications (`turn/started`, `item/completed`, etc.).
 - Handle the full lifecycle: initialize → thread/start → turn/start → stream → turn/completed.
+
+The built harness also benefited from:
+
+- sandbox alias normalization before sending JSON-RPC requests,
+- explicit handling for `ContextWindowExceeded` via `thread/compact/start`,
+- per-turn timeout handling with `turn/interrupt`,
+- idempotent client shutdown so late stdout/stderr does not crash the runner.
 
 ### Worktree management
 
-- The setup agent calls `scripts/harness/init.sh` which handles worktree creation, dependency installation, and build verification.
-- The loop driver parses the worktree path from the setup agent's output and sets `cwd` for subsequent Codex threads.
-- Clean up the worktree after the PR is created (or on failure, with a flag to preserve for debugging).
+- The setup agent calls `scripts/harness/init.sh`, which may build and then delegate to `harnesscli init`.
+- The loop driver parses the JSON output from `init.sh` and sets `cwd` for subsequent Codex threads.
+- Clean up the worktree after the PR is created, unless `--preserve-worktree` is set for debugging.
 
 ### Logging
 
-- Log all Codex events to a file under `.worktree/<worktree_id>/logs/ralph-loop.log`.
+- Log all Codex events to `.worktree/<worktree_id>/logs/ralph-loop.log`.
 - Print high-level status to stdout: phase transitions, iteration counts, commit hashes, completion signal, PR URL.
 - On failure, print the last N lines of the log for debugging.
 - Treat log writes as best-effort only; logging must never crash the loop runner.
-- Make client shutdown idempotent. The child process can still emit `stdout`, `stderr`, or `close` after shutdown begins.
-- Guard against `write after end` by ignoring late log writes once the stream is ending or closed.
 
 ### Integration with harness
 
-Add to `package.json`:
-
-```json
-{
-  "ralph-loop": "npx tsx scripts/ralph-loop/ralph-loop.mts"
-}
-```
-
-Add to `Makefile.harness`:
-
-```makefile
-ralph-loop:
-	@npx tsx scripts/ralph-loop/ralph-loop.mts $(ARGS)
-```
+- Add a `Makefile.harness` target for `ralph-loop`.
+- Keep `./ralph-loop` as the documented command even if the underlying implementation is `go run` during early bring-up.
 
 ---
 
 ## Deliverables
 
-- [ ] `scripts/ralph-loop/ralph-loop.mts` — main entry point with CLI parsing
-- [ ] `scripts/ralph-loop/lib/codex-client.mts` — app-server stdio JSON-RPC client
-- [ ] `scripts/ralph-loop/lib/setup-agent.mts` — Phase 1: environment prep + plan creation
-- [ ] `scripts/ralph-loop/lib/coding-loop.mts` — Phase 2: iterative coding loop with completion detection
-- [ ] `scripts/ralph-loop/lib/pr-agent.mts` — Phase 3: PR creation from commits + plan
-- [ ] `scripts/ralph-loop/lib/completion.mts` — `<promise>COMPLETE</promise>` detection utility
-- [ ] `scripts/ralph-loop/lib/worktree.mts` — parses worktree info from setup agent output, handles cleanup
-- [ ] `package.json` script entry for `ralph-loop`
+- [ ] `cmd/ralph-loop/main.go` active CLI entrypoint
+- [ ] `internal/ralphloop/` package with reusable orchestration modules
+- [ ] Stable repo-root `./ralph-loop` shim
+- [ ] App-server stdio JSON-RPC client
+- [ ] Setup-agent orchestration
+- [ ] Coding-loop orchestration with completion detection
+- [ ] PR-agent orchestration
+- [ ] Worktree/init integration that parses the `init.sh` JSON contract
+- [ ] Structured log file under `.worktree/<id>/logs/ralph-loop.log`
+- [ ] Tests for CLI parsing, app-server client behavior, completion detection, and prompt construction
 - [ ] `Makefile.harness` target for `ralph-loop`
-- [ ] Tests for codex-client message parsing, completion detection, and prompt construction
 
 ---
 

@@ -56,7 +56,7 @@ This is the direction I want:
 ### Reference documents
 * When scaffolding `docs/references/`, copy the documentation-oriented contents of `create-harness/references/` into `docs/references/`.
 * These are pre-curated LLM-friendly reference files (e.g., `codex-app-server-llm.txt`) that give agents context about external tools, frameworks, and patterns used by the project.
-* If `create-harness/references/` also contains reference implementations such as `scripts/ralph-loop/`, copy those into the matching repository path instead of under `docs/references/`.
+* If `create-harness/references/` also contains reference implementations such as `cmd/ralph-loop/`, `internal/ralphloop/`, or a repo-root `ralph-loop` shim, copy those into the matching repository path instead of under `docs/references/`.
 * Add project-specific references over time as new dependencies or external integrations are introduced.
 
 ### Non-negotiable rules
@@ -72,6 +72,18 @@ This is the direction I want:
 * docs/product-specs/ should contain feature-level product specs and be accessible through an index.md.
 
 * docs/design-docs/ should contain design rationale, core beliefs, and major decision documents, with a way to track status and verification state.
+
+### Minimum runtime and validation docs
+
+Phase 1 should create the canonical docs that later harness phases depend on. At minimum:
+
+* `docs/design-docs/index.md` should be a real index, not a placeholder. Include columns for canonical topic ownership, intended audience, and when each doc must be updated.
+* `docs/design-docs/local-operations.md` should document the local command surface, environment variables, launch contracts, and troubleshooting.
+* `docs/design-docs/worktree-isolation.md` should explain how worktree IDs, ports, runtime roots, cleanup, and stale-process handling work.
+* `docs/design-docs/observability-shim.md` should document the telemetry data flow and the HTTP query contract used by the local observability stack.
+* `docs/product-specs/harness-demo-app.md` should define the deterministic browser-visible app surface the harness boots for validation.
+
+The built harness in this repository needed these documents to keep `AGENTS.md` short while still making the runtime contract discoverable to both humans and agents.
 
 ### Core beliefs and agent-first operating principles
 
