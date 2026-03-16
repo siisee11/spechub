@@ -83,6 +83,32 @@ Each command should support env var overrides via `std::env::var` and invoke ext
 
 Harness operations should be exposed directly through `harnesscli` subcommands rather than separate shell wrapper entrypoints, so the CLI remains the single stable operator surface.
 
+### Shared output contract
+
+Every `harnesscli` command must implement a shared output contract:
+
+- Support `--output json|ndjson|text`
+- Default to `json` when stdout is not a TTY
+- Keep `text` only as an explicit human-oriented mode
+- Emit structured JSON errors for every non-zero exit, with stable fields such as:
+
+```json
+{
+  "error": {
+    "code": "port_in_use",
+    "message": "Derived port 4317 is already occupied",
+    "command": "observability start",
+    "details": {
+      "worktree_id": "abc123",
+      "port": 4317
+    }
+  }
+}
+```
+
+- Use `ndjson` for any command that streams progress, emits paginated data, or can return large result sets
+- Add tests covering JSON success output, JSON error output, and non-TTY default behavior
+
 ### `harnesscli smoke`
 
 The fastest possible sanity check — "does this project compile/build at all?" Should complete in seconds, not minutes. Use it to catch obvious breakage before running expensive checks.
@@ -114,7 +140,7 @@ Audits the repo for harness compliance. It accepts an optional repo path argumen
 1. **File existence** — verify all required files exist (see audit checks reference table below)
 2. **Directory existence** — verify all required directories exist (see audit checks reference table below)
 
-For each check, print `[ok]` or `[missing]` with a descriptive label. At the end, if any checks failed, print the failure count and exit with a non-zero status. If all pass, print "Harness audit passed." and exit 0.
+In `--output text`, print `[ok]` or `[missing]` with a descriptive label. In `--output json`, return a single JSON object containing all checks, a summary, and pass/fail status. In `--output ndjson`, emit one JSON object per check plus a final summary object. Default to JSON when stdout is not a TTY. If any checks failed, exit non-zero with a structured JSON error or summary payload; if all pass, include `"passed": true`.
 
 Use `std::path::Path::exists()` for file/directory checks.
 
@@ -155,7 +181,7 @@ cargo build --release --manifest-path harness/Cargo.toml
 
 ## Step 4: Run the audit
 
-Run `harnesscli audit .` and verify all checks pass. Fix any `[missing]` items until the output ends with:
+Run `harnesscli audit . --output json` and verify all checks pass. Fix any `[missing]` items until the structured output reports `"passed": true`. Human-oriented verification in `--output text` should still end with:
 
 ```
 Harness audit passed.

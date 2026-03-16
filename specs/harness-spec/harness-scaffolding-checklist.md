@@ -49,6 +49,7 @@ This phase makes the app bootable per Git worktree for isolated development:
 - [ ] Launch contract returning metadata (`app_url`, `port`, `healthcheck_url`, `worktree_id`, `runtime_root`, and observability metadata when available)
 - [ ] Healthcheck-based readiness (no blind sleeps)
 - [ ] `harnesscli init` — idempotent environment initialization with JSON output contract
+- [ ] `harnesscli boot {start,status,stop}` — machine-readable lifecycle commands with JSON/NDJSON output
 - [ ] `agent-browser` skill installed for UI investigation
 - [ ] Example reproducibility and validation flow
 
@@ -69,6 +70,7 @@ This phase sets up ephemeral, per-worktree telemetry so the agent can query logs
 - [ ] `harnesscli observability start` — starts the stack with health checks
 - [ ] `harnesscli observability stop` — tears down the stack and cleans up
 - [ ] `harnesscli observability query` — convenience wrapper for LogQL/PromQL/TraceQL queries
+- [ ] Observability commands default to structured output in non-TTY contexts and support NDJSON for streaming queries
 - [ ] Integrated with worktree app boot flow
 
 ---
@@ -101,6 +103,7 @@ This phase encodes golden principles and builds automated garbage collection for
 - [ ] `harnesscli cleanup scan` — scans for violations, outputs JSON report
 - [ ] `harnesscli cleanup grade` — computes and tracks quality grade
 - [ ] `harnesscli cleanup fix` — generates focused, small cleanup PRs
+- [ ] Cleanup commands support JSON/NDJSON output modes for large scans and long-running fix operations
 - [ ] `.github/workflows/recurring-cleanup.yml` — daily scheduled scan, grade update, and PR generation
 - [ ] `make scan` and `make grade` targets in `Makefile.harness`
 - [ ] Error-severity violations integrated into `make lint`
@@ -136,6 +139,7 @@ This is the final phase — it verifies everything from all prior phases is wire
 - [ ] `harnesscli typecheck` — type checking
 - [ ] `harnesscli init`, `harnesscli boot`, and `harnesscli observability` command groups implemented
 - [ ] `harnesscli audit` — audits all files and directories exist
+- [ ] Every `harnesscli` command supports `--output json|ndjson|text`, defaults to JSON in non-TTY contexts, and returns structured JSON errors
 - [ ] `harness/Cargo.toml` — Rust crate for the `harnesscli` CLI
 - [ ] `.github/workflows/harness.yml` — CI workflow running `make ci`
 - [ ] `harnesscli` CLI builds successfully (`cargo build --release -p harness`)

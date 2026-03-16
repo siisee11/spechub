@@ -193,6 +193,7 @@ Starts the full observability stack for the current worktree:
 Port numbers above are examples — use worktree-derived values.
 
 Support env var overrides for all ports via `std::env::var`.
+Support `--output json|ndjson|text`, defaulting to JSON in non-TTY contexts. If readiness is streamed step-by-step, emit NDJSON events so agents can consume status incrementally.
 
 ### `harnesscli observability stop`
 
@@ -201,6 +202,8 @@ Stops the observability stack for the current worktree:
 1. Derive the same worktree ID
 2. Stop Vector, Victoria Logs, Victoria Metrics, Victoria Traces (use PID files or process matching)
 3. Optionally clean up data directories (use `--clean` flag)
+
+Return a structured JSON result describing which processes were stopped, which were already absent, and whether cleanup ran. Failures must use the shared structured error contract.
 
 ### `harnesscli observability query`
 
@@ -213,6 +216,8 @@ harnesscli observability query traces '{duration > 2s}'
 ```
 
 Should auto-detect the correct port for the current worktree and format the output as JSON. Use `reqwest` or `ureq` for HTTP requests and `serde_json` for output formatting.
+Support `--output json|ndjson|text`, defaulting to JSON in non-TTY contexts.
+For multi-row, paginated, or long-running queries, `--output ndjson` should emit one JSON object per result row or page so an agent can stream and truncate safely without reparsing a giant array.
 
 ## Step 8: Integrate with app boot flow
 

@@ -40,6 +40,7 @@ The [`harness-scaffolding-checklist.md`](./harness-scaffolding-checklist.md) tra
 
 - **Single Rust harness system of record.** Harness behavior should live in `harnesscli` subcommands. Do not require shell wrapper entrypoints for harness operations when the Rust CLI can serve as the stable interface directly.
 - **Every command has a test.** Tests live as `#[cfg(test)]` modules or under `harness/tests/`.
+- **Machine-readable output is mandatory.** Every `harnesscli` command must support structured output. Default to JSON in non-TTY contexts, use NDJSON for streaming or paginated responses, and return structured JSON errors on failure.
 - **Worktree isolation.** All runtime resources (ports, temp dirs, data dirs, logs) are derived from a deterministic worktree ID.
 - **No blind sleeps.** Readiness is healthcheck-based.
 - **Ralph Loop is externalized.** The autonomous coding loop is specified in [`https://github.com/siisee11/ralph-loop.spec/blob/main/SPEC.md`](https://github.com/siisee11/ralph-loop.spec/blob/main/SPEC.md); create-harness integrates around it rather than redefining it inline.

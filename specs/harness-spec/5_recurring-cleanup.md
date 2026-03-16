@@ -190,6 +190,8 @@ Implement the `harnesscli cleanup scan` subcommand that:
 2. For each principle, runs the detection logic against the codebase
 3. Outputs a structured report of all violations found
 
+Support `--output json|ndjson|text`, defaulting to JSON in non-TTY contexts. `--output ndjson` should emit one JSON object per violation plus a terminal summary object so large scans can be streamed safely.
+
 The report format should be JSON:
 
 ```json
@@ -224,6 +226,8 @@ Implement the `harnesscli cleanup grade` subcommand that:
 1. Runs the scanner
 2. Computes a quality grade for the codebase based on violation counts and severities
 3. Writes the grade to a trackable file (e.g., `docs/generated/quality-grade.json`)
+
+The command's stdout should also support the shared structured output contract so agents can consume the computed grade without reading files from disk.
 
 The grade file should include:
 
@@ -269,6 +273,7 @@ The fix logic per principle can be:
 - **Agent-assisted**: The command creates the branch with a description of what needs to change, and a coding agent completes the fix
 
 Start with automated fixes for simple principles (dead code removal, import replacement) and agent-assisted for complex ones (boundary validation refactoring).
+Support `--output json|ndjson|text`, defaulting to JSON in non-TTY contexts. `--output ndjson` should stream one event per branch, PR, or fix attempt so agents can follow long-running cleanup work incrementally.
 
 ---
 

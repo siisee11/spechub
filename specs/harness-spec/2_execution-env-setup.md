@@ -78,6 +78,8 @@ Create a clear contract so Coding agent can launch one app instance per change/w
 Expectations:
 
 - Provide a command or script intended for automation use.
+- The command surface must support `--output json|ndjson|text`.
+- In non-TTY contexts, structured output must be the default. Human-oriented text is opt-in via `--output text`.
 - It should return enough metadata for downstream tooling, such as:
   - App URL
   - Selected port
@@ -87,6 +89,7 @@ Expectations:
   - Observability URL or query base when observability is started alongside boot
 - Startup should block until the app is actually ready, or fail clearly.
 - Add healthcheck logic rather than relying on blind sleeps.
+- Any failure must emit a structured JSON error object to stderr with a stable error code, message, and relevant command context.
 
 ### C. Environment initialization entrypoint (`harnesscli init`)
 
@@ -135,6 +138,8 @@ The command must print a JSON object to stdout on success:
 - Must not require interactive input.
 - Exit code 0 on success, non-zero on any failure.
 - All output except the final JSON goes to stderr so the JSON can be parsed from stdout.
+- Support `--output json` explicitly even though JSON is already the default in non-TTY contexts.
+- If progress is streamed, emit NDJSON events to stderr or behind an explicit `--output ndjson` mode so an agent can consume incremental state without parsing prose.
 
 **This command is reused by the Ralph Loop** ([`https://github.com/siisee11/ralph-loop.spec/blob/main/SPEC.md`](https://github.com/siisee11/ralph-loop.spec/blob/main/SPEC.md)) as a deterministic replacement for the setup agent's environment preparation steps. The setup agent calls `harnesscli init` first, then only needs to create the execution plan.
 
@@ -158,6 +163,7 @@ Please produce all of the following:
 1. **Implementation**
    - Code changes for worktree-aware booting
    - `harnesscli init` — environment initialization command with JSON output contract
+   - `harnesscli boot {start,status,stop}` — machine-readable launch lifecycle commands with JSON/NDJSON output modes
    - Install and configure the `agent-browser` skill
 
 2. **Design note**
