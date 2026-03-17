@@ -93,10 +93,10 @@ test("install-spec copies companion files from the spec folder", async () => {
 
   expect({ exitCode, stderr }).toEqual({ exitCode: 0, stderr: "" });
   expect(stdout).toContain("installed demo-spec into ");
-  expect(stdout.trim()).toEndWith("/demo-spec");
-  await access(join(targetDir, "demo-spec/SPEC.md"), constants.F_OK);
-  await access(join(targetDir, "demo-spec/notes.md"), constants.F_OK);
-  await access(join(targetDir, "demo-spec/assets/example.txt"), constants.F_OK);
+  expect(stdout.trim()).toEndWith("/specs/demo-spec");
+  await access(join(targetDir, "specs/demo-spec/SPEC.md"), constants.F_OK);
+  await access(join(targetDir, "specs/demo-spec/notes.md"), constants.F_OK);
+  await access(join(targetDir, "specs/demo-spec/assets/example.txt"), constants.F_OK);
 });
 
 test("install-spec fails when the target spec folder lacks SPEC.md", async () => {

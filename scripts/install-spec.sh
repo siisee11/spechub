@@ -23,7 +23,8 @@ tar -xzf "$archive_path" -C "$tmp_dir"
 
 repo_root="$(find "$tmp_dir" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
 spec_source="$repo_root/specs/$spec_slug"
-spec_target="./$spec_slug"
+specs_root="./specs"
+spec_target="$specs_root/$spec_slug"
 
 if [ ! -d "$spec_source" ]; then
   echo "spec '$spec_slug' not found in ${repo}@${ref}" >&2
@@ -35,10 +36,17 @@ if [ ! -f "$spec_source/SPEC.md" ]; then
   exit 1
 fi
 
+if [ -e "$specs_root" ] && [ ! -d "$specs_root" ]; then
+  echo "destination root '$specs_root' is not a directory" >&2
+  exit 1
+fi
+
+mkdir -p "$specs_root"
+
 if [ -e "$spec_target" ]; then
   echo "destination '$spec_target' already exists" >&2
   exit 1
 fi
 
 cp -R "$spec_source" "$spec_target"
-printf '%s\n' "installed $spec_slug into $(pwd)/$spec_slug"
+printf '%s\n' "installed $spec_slug into $(pwd)/specs/$spec_slug"
