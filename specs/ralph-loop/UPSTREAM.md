@@ -6,7 +6,7 @@ This directory vendors third-party specification content from `siisee11/ralph-lo
 
 - Repository: `https://github.com/siisee11/ralph-loop.spec`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-16): `e56155608f27d2d55cda6403120d926fc4d35db2`
+- Resolved commit at fetch time (2026-03-17): `e56155608f27d2d55cda6403120d926fc4d35db2`
 - License in upstream repo: no top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs

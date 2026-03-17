@@ -4,15 +4,19 @@ Build a recurring, automated cleanup system that encodes golden principles into 
 
 The goal: on a regular cadence, background tasks scan for deviations from golden principles, update quality grades, and open targeted refactoring pull requests. Most of these PRs should be reviewable in under a minute and safe to automerge.
 
+This phase is **not** the per-commit merge gate. Unlike Phase 4, the principles here do not need to be fully satisfied on every commit before merge. Instead, define a broader set of golden principles that are checked exhaustively on a recurring schedule (daily by default) through `harnesscli cleanup ...` commands. Use this phase for repository-wide hygiene, drift detection, grading, and small cleanup PR generation.
+
 ---
 
 ## Step 1: Define golden principles
 
 Before building automation, codify the golden principles for this repository. These are opinionated, mechanical rules that keep the codebase legible and consistent for future agent runs.
 
+Do not duplicate checks that are already owned by Phase 4. Phase 4 supplies the always-on merge-blocking enforcement for architectural and structural invariants through `harnesscli lint` and `harnesscli test`. Phase 5 should focus on recurring repository-wide hygiene, grading, and cleanup work that is valuable to run daily but is not required to block every commit before merge.
+
 Explore the codebase and define principles in a machine-readable file (`golden-principles.yaml` or similar). Each principle should have:
 
-- **id**: Short identifier (e.g., `prefer-shared-utils`, `validate-boundaries`)
+- **id**: Short identifier (e.g., `prefer-shared-utils`, `no-inline-secrets`)
 - **description**: What the principle enforces and why
 - **detection**: How to find violations (grep pattern, AST rule, file structure check, etc.)
 - **remediation**: What the fix looks like — specific enough for an agent to act on
@@ -21,50 +25,16 @@ Explore the codebase and define principles in a machine-readable file (`golden-p
 
 Start with the following baseline principles and adapt to this project. The list should grow over time as new patterns are identified.
 
-### Boundary and security principles (severity: error)
+### Repository-wide hygiene and safety principles
 
 ```yaml
 principles:
-  - id: validate-boundaries
-    description: >
-      Boundary modules must validate unknown input before it reaches internal code.
-      Never probe data shapes by guessing — parse, don't probe.
-    detection_kind: boundary-lint
-    remediation: >
-      Add a dedicated parser or validation guard at the ingress point and reject
-      malformed input before routing it inward.
-    severity: error
-    automerge: false
-
-  - id: parse-dont-probe
-    description: >
-      External and cross-boundary data must be parsed through a schema or validator,
-      never accessed via unchecked property reads or type assertions.
-    detection_kind: boundary-lint
-    remediation: >
-      Define a Zod schema (or equivalent parser) for the data shape and call
-      .parse() or .safeParse() at the boundary. Remove bare `as` casts on unknown input.
-    severity: error
-    automerge: false
-
   - id: no-inline-secrets
     description: >
       Source files and docs must not contain real credentials or token-shaped secret values.
     detection_kind: secret-scan
     remediation: >
       Move the value into environment or config and keep examples obviously fake.
-    severity: error
-    automerge: false
-
-  - id: structured-logging-only
-    description: >
-      All log calls must use the structured logger; never use raw console.log,
-      console.warn, or console.error in production code.
-    detection_kind: structured-logging
-    remediation: >
-      Replace the raw console call with the structured logger
-      (e.g. `logger.info({ context, detail }, "message")`) and import from
-      the project's logging module.
     severity: error
     automerge: false
 
@@ -94,17 +64,6 @@ principles:
     severity: warn
     automerge: false
 
-  - id: consistent-schema-naming
-    description: >
-      Zod schemas must be named with a Schema suffix and inferred types with
-      the corresponding unsuffixed name (e.g. FooSchema / Foo).
-    detection_kind: naming-convention
-    remediation: >
-      Rename the schema to end with Schema and export the inferred type as:
-      `export type Foo = z.infer<typeof FooSchema>`.
-    severity: warn
-    automerge: true
-
   - id: no-wildcard-re-exports
     description: >
       Modules must not use `export *` which obscures the public API and makes
@@ -114,17 +73,6 @@ principles:
       Replace `export *` with explicit named exports so the module boundary is legible.
     severity: warn
     automerge: true
-
-  - id: single-responsibility-imports
-    description: >
-      A source file must not import from more than three architectural layers;
-      excessive cross-layer coupling signals a design problem.
-    detection_kind: architecture-lint
-    remediation: >
-      Extract a facade or intermediate module to reduce the number of layer
-      dependencies in a single file.
-    severity: warn
-    automerge: false
 
   - id: no-dead-code
     description: >
@@ -157,28 +105,9 @@ principles:
     severity: warn
     automerge: true
 
-  - id: shell-strict-mode
-    description: >
-      Harness shell scripts must run with strict mode enabled.
-    detection_kind: shell-strict
-    remediation: >
-      Add `set -euo pipefail` near the top of the script.
-    severity: warn
-    automerge: true
-
-  - id: keep-source-files-focused
-    description: >
-      Source and script files should stay small enough for an agent to
-      understand quickly.
-    detection_kind: file-size
-    remediation: >
-      Split oversized files into focused helpers and keep only the composition
-      root in the top-level module.
-    severity: warn
-    automerge: true
 ```
 
-Adapt the detection kinds to the project's language and tooling. Some detection kinds (like `boundary-lint`, `architecture-lint`, `todo-scan`, `shell-strict`, `file-size`) can be implemented as static scans. Others (like `structured-logging`, `naming-convention`, `duplicate-utility`, `test-coverage`, `dead-code`, `error-handling`) may require AST analysis or heuristic grep patterns.
+Adapt the detection kinds to the project's language and tooling. Favor recurring checks that are repository-wide and non-blocking for day-to-day iteration. For example, `todo-scan`, `secret-scan`, `duplicate-utility`, `test-coverage`, `dead-code`, and `error-handling` can be implemented as static scans, AST analysis, or heuristic grep patterns. Do not re-register detection kinds that are already enforced as Phase 4 pre-merge invariants.
 
 ---
 
@@ -190,7 +119,7 @@ Implement the `harnesscli cleanup scan` subcommand that:
 2. For each principle, runs the detection logic against the codebase
 3. Outputs a structured report of all violations found
 
-Support `--output json|ndjson|text`, defaulting to JSON in non-TTY contexts. `--output ndjson` should emit one JSON object per violation plus a terminal summary object so large scans can be streamed safely.
+Support `--output json|ndjson|text`, defaulting to JSON in non-TTY contexts. `--output ndjson` should emit one JSON object per violation plus a terminal summary object so large scans can be streamed safely. This command should be callable manually and from scheduled automation; it is not the default pre-merge gate.
 
 The report format should be JSON:
 
@@ -239,7 +168,7 @@ The grade file should include:
   "trend": "improving",
   "breakdown": {
     "prefer-shared-utils": { "violations": 2, "max_score": 15, "score": 11 },
-    "validate-boundaries": { "violations": 0, "max_score": 25, "score": 25 },
+    "no-inline-secrets": { "violations": 0, "max_score": 25, "score": 25 },
     "no-dead-code": { "violations": 3, "max_score": 20, "score": 14 }
   },
   "previous": {
@@ -335,15 +264,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Customize the cron schedule for this project's cadence. Daily is a good default — frequent enough to catch drift early, not so frequent it creates noise.
+Customize the cron schedule for this project's cadence. Daily is a good default — frequent enough to catch drift early, not so frequent it creates noise. This scheduled workflow is the primary enforcement path for Phase 5.
 
 ---
 
 ## Step 6: Integrate with existing harness
 
-- The scanner should also run as part of `make lint` — violations with `severity: error` should fail the build
-- The quality grade should be checked in CI — if the grade drops below a configurable threshold, the build warns (or fails)
-- Add `make scan` and `make grade` targets to `Makefile.harness`:
+- Expose the recurring cleanup flow through `harnesscli cleanup {scan,grade,fix}` so it can be run manually by humans and agents
+- Keep the primary enforcement path in the scheduled workflow rather than the per-commit merge gate
+- The quality grade should be checked in the recurring workflow — if the grade drops below a configurable threshold, the workflow should warn (or fail) and surface the regression
+- Add `make scan` and `make grade` targets to `Makefile.harness` for on-demand local runs:
 
 ```makefile
 scan: harness-build
@@ -361,7 +291,7 @@ grade: harness-build
 2. Run `harnesscli cleanup grade` and confirm it produces a quality grade
 3. Intentionally introduce a violation and confirm the scanner catches it
 4. Run `harnesscli cleanup fix` on a test branch and confirm it opens a well-formed PR
-5. Confirm `make lint` fails on `severity: error` violations
+5. Confirm the scheduled workflow (or an equivalent manual invocation) surfaces severe violations and generates the expected grade/cleanup output without being wired as a required per-commit merge gate
 
 ---
 
@@ -373,7 +303,7 @@ grade: harness-build
 - [ ] `harnesscli cleanup fix` — generates focused cleanup PRs
 - [ ] `.github/workflows/recurring-cleanup.yml` — daily scheduled workflow
 - [ ] `make scan` and `make grade` targets in `Makefile.harness`
-- [ ] Scanner integrated into `make lint` for error-severity violations
+- [ ] Daily scheduled workflow is the primary enforcement path; cleanup commands are available for on-demand runs via `harnesscli`
 - [ ] Quality grade tracked in `docs/generated/quality-grade.json`
 
 ## Key principle

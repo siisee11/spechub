@@ -6,14 +6,14 @@ This directory vendors third-party specification content from `openai/symphony`.
 
 - Repository: `https://github.com/openai/symphony`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-16): `ff65c7c729c03d4daa550bd30290fc5291f60c67`
+- Resolved commit at fetch time (2026-03-17): `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`
 - License in upstream repo: top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs
 
-- `SPEC.md`: `https://github.com/openai/symphony/blob/ff65c7c729c03d4daa550bd30290fc5291f60c67/SPEC.md`
-- `LICENSE`: `https://github.com/openai/symphony/blob/ff65c7c729c03d4daa550bd30290fc5291f60c67/LICENSE`
-- `NOTICE`: `https://github.com/openai/symphony/blob/ff65c7c729c03d4daa550bd30290fc5291f60c67/NOTICE`
+- `SPEC.md`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/SPEC.md`
+- `LICENSE`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/LICENSE`
+- `NOTICE`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/NOTICE`
 
 ## Import method
 
@@ -29,8 +29,8 @@ This directory vendors third-party specification content from `openai/symphony`.
 
 ## Modification status
 
-- `SPEC.md`: unmodified copy of the upstream file at commit `ff65c7c729c03d4daa550bd30290fc5291f60c67`.
-- `LICENSE`: unmodified copy of the upstream file at commit `ff65c7c729c03d4daa550bd30290fc5291f60c67`.
-- `NOTICE`: unmodified copy of the upstream file at commit `ff65c7c729c03d4daa550bd30290fc5291f60c67`.
+- `SPEC.md`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
+- `LICENSE`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
+- `NOTICE`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
 - `metadata.json` is repository-local discovery metadata.
 - `UPSTREAM.md` is repository-local provenance metadata.
