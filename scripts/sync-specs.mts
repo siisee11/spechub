@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const REPO_LOCAL_FILES = new Set(["metadata.json", "UPSTREAM.md"]);
-const SPEC_ONLY_FILES = ["SPEC.md", "LICENSE", "NOTICE"] as const;
+const SPEC_ONLY_FILES = ["SPEC.md", "README.md", "LICENSE", "NOTICE"] as const;
 const GIT_METADATA_DIRECTORY = ".git";
 
 export type SyncResult = {

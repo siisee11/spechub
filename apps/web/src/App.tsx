@@ -1,4 +1,5 @@
 import type { SpecCatalogEntry } from './lib/spec-catalog';
+import { renderMarkdown } from './lib/render-markdown';
 import './App.css';
 
 export async function defaultCopyImplementPrompt(prompt: string): Promise<void> {
@@ -58,6 +59,12 @@ export default function App({
                 </div>
               </dl>
               <pre className="install-command">{spec.implementPrompt}</pre>
+              {spec.readmeContent ? (
+                <section className="readme-section" aria-label={`README for ${spec.slug}`}>
+                  <p className="readme-label">README</p>
+                  <div className="readme-content">{renderMarkdown(spec.readmeContent)}</div>
+                </section>
+              ) : null}
               <div className="actions">
                 <button
                   type="button"

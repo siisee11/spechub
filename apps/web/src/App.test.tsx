@@ -15,6 +15,7 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
       source: 'https://github.com/siisee11/harness.spec',
       syncedDate: '2026-03-10T12:34:10Z',
     },
+    readmeContent: '# Overview\n\nPortable agent loop.\n',
   },
   {
     slug: 'docs-blueprint',
@@ -24,6 +25,7 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
     implementPrompt:
       'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"` command and start implement that spec.',
     metadata: null,
+    readmeContent: null,
   },
 ];
 
@@ -49,10 +51,14 @@ describe('App', () => {
     expect(screen.getAllByText('Synced date (UTC)')).toHaveLength(2);
     expect(screen.getByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).toBeInTheDocument();
     expect(screen.getByText('2026-03-10T12:34:10Z')).toBeInTheDocument();
+    expect(screen.getByText('README')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Overview' })).toBeInTheDocument();
+    expect(screen.getByText('Portable agent loop.')).toBeInTheDocument();
     expect(screen.queryByLabelText('Selected spec details')).not.toBeInTheDocument();
     expect(screen.queryByText('Selected spec')).not.toBeInTheDocument();
     expect(screen.getByText('Generate canonical docs structure.')).toBeInTheDocument();
     expect(screen.getAllByText('Unknown')).toHaveLength(2);
+    expect(screen.queryByLabelText('README for docs-blueprint')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('Copy implement prompt for docs-blueprint'));
     expect(copyMock).toHaveBeenCalledWith(

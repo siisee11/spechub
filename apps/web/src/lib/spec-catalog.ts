@@ -8,6 +8,7 @@ export type RepoSource = {
 export type SpecMarkdownFile = {
   path: string;
   content: string;
+  readmeContent?: string | null;
   metadata?: SpecMetadata | null;
 };
 
@@ -22,6 +23,7 @@ export type SpecCatalogEntry = {
   description: string;
   specPath: string;
   implementPrompt: string;
+  readmeContent?: string | null;
   metadata?: SpecMetadata | null;
 };
 
@@ -104,6 +106,7 @@ export function buildSpecCatalog(
         description: parsed.description,
         specPath: `specs/${slug}`,
         implementPrompt: buildImplementPrompt(slug, repoSource),
+        readmeContent: file.readmeContent ?? null,
         metadata: file.metadata ?? null,
       } satisfies SpecCatalogEntry;
     })

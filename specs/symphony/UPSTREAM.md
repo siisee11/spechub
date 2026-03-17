@@ -12,24 +12,27 @@ This directory vendors third-party specification content from `openai/symphony`.
 ## Canonical source URLs
 
 - `SPEC.md`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/SPEC.md`
+- `README.md`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/README.md`
 - `LICENSE`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/LICENSE`
 - `NOTICE`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/NOTICE`
 
 ## Import method
 
 - Selected upstream files copied into the corresponding `specs/<slug>/` directory.
-- Synced files: `SPEC.md`, `LICENSE`, `NOTICE`.
+- Synced files: `SPEC.md`, `README.md`, `LICENSE`, `NOTICE`.
 - Repository-local metadata files are preserved.
 
 ## Integrity hashes from imported files
 
 - `SPEC.md`: `7b6ee20dac07111071ae490f94e8d1939a2865f63fc4f4441d715da5054c5252`
+- `README.md`: `95a422fd9e525b2e25cd2e172d61ff3f14f749bad8ad198fa2b3f9b5b5dfc0e7`
 - `LICENSE`: `c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4`
 - `NOTICE`: `38c76eb8701e52953f63154a77b407667a6ee34c3a2a8785c8f8b2cd5494d09d`
 
 ## Modification status
 
 - `SPEC.md`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
+- `README.md`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
 - `LICENSE`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
 - `NOTICE`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
 - `metadata.json` is repository-local discovery metadata.

@@ -49,6 +49,14 @@ async function loadSpecMetadata(specRoot: string): Promise<SpecMetadata | null> 
   }
 }
 
+async function loadOptionalMarkdown(specRoot: string, filename: string): Promise<string | null> {
+  try {
+    return await readFile(path.join(specRoot, filename), 'utf8');
+  } catch {
+    return null;
+  }
+}
+
 export async function loadSpecMarkdownFilesFromRepository(repoRoot: string): Promise<SpecMarkdownFile[]> {
   const specsRoot = path.join(repoRoot, 'specs');
   let entries: Awaited<ReturnType<typeof readdir>>;
@@ -67,10 +75,15 @@ export async function loadSpecMarkdownFilesFromRepository(repoRoot: string): Pro
         const specPath = path.join(specRoot, 'SPEC.md');
 
         try {
-          const [content, metadata] = await Promise.all([readFile(specPath, 'utf8'), loadSpecMetadata(specRoot)]);
+          const [content, readmeContent, metadata] = await Promise.all([
+            readFile(specPath, 'utf8'),
+            loadOptionalMarkdown(specRoot, 'README.md'),
+            loadSpecMetadata(specRoot),
+          ]);
           return {
             path: toPosixPath(path.relative(repoRoot, specPath)),
             content,
+            readmeContent,
             metadata,
           } satisfies SpecMarkdownFile;
         } catch {

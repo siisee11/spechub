@@ -25,7 +25,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
     await expect(loadSpecMarkdownFilesFromRepository(repoRoot)).resolves.toEqual([]);
   });
 
-  it('loads only SPEC.md files from spec directories', async () => {
+  it('loads SPEC.md files and optional README.md from spec directories', async () => {
     const repoRoot = await createTempRepo();
 
     await mkdir(path.join(repoRoot, 'specs', 'harness-spec'), { recursive: true });
@@ -36,6 +36,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
       '# Harness Spec\n\nBuild systems.\n',
       'utf8',
     );
+    await writeFile(path.join(repoRoot, 'specs', 'harness-spec', 'README.md'), '# Readme\n\nExtra details.\n', 'utf8');
 
     const files = (await loadSpecMarkdownFilesFromRepository(repoRoot)).sort((a, b) => a.path.localeCompare(b.path));
 
@@ -43,6 +44,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
       {
         path: 'specs/harness-spec/SPEC.md',
         content: '# Harness Spec\n\nBuild systems.\n',
+        readmeContent: '# Readme\n\nExtra details.\n',
         metadata: null,
       },
     ]);
@@ -80,16 +82,19 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
       {
         path: 'specs/broken-spec/SPEC.md',
         content: '# Broken\n\nBad metadata.\n',
+        readmeContent: null,
         metadata: null,
       },
       {
         path: 'specs/invalid-json/SPEC.md',
         content: '# Invalid Json\n\nBad metadata json.\n',
+        readmeContent: null,
         metadata: null,
       },
       {
         path: 'specs/symphony/SPEC.md',
         content: '# Symphony\n\nAgent loop.\n',
+        readmeContent: null,
         metadata: {
           source: 'https://github.com/openai/symphony',
           syncedDate: '2026-03-10T12:34:10Z',
@@ -138,11 +143,13 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
       {
         path: 'specs/empty-metadata/SPEC.md',
         content: '# Empty\n\nInvalid metadata.\n',
+        readmeContent: null,
         metadata: null,
       },
       {
         path: 'specs/trimmed-spec/SPEC.md',
         content: '# Trimmed\n\nValid metadata.\n',
+        readmeContent: null,
         metadata: {
           source: 'https://github.com/openai/symphony',
           syncedDate: '2026-03-10T12:34:10Z',
@@ -160,6 +167,7 @@ describe('loadSpecCatalogFromRepository', () => {
     await mkdir(path.join(repoRoot, 'specs', 'a-spec'), { recursive: true });
     await writeFile(path.join(repoRoot, 'specs', 'z-spec', 'SPEC.md'), '# Z Spec\n\nZ summary.\n', 'utf8');
     await writeFile(path.join(repoRoot, 'specs', 'a-spec', 'SPEC.md'), '# A Spec\n\nA summary.\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'specs', 'a-spec', 'README.md'), '# A Readme\n\nSetup steps.\n', 'utf8');
     await writeFile(
       path.join(repoRoot, 'specs', 'a-spec', 'metadata.json'),
       JSON.stringify(
@@ -182,10 +190,12 @@ describe('loadSpecCatalogFromRepository', () => {
     expect(catalog[0]?.implementPrompt).toBe(
       'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "a-spec"` command and start implement that spec.',
     );
+    expect(catalog[0]?.readmeContent).toBe('# A Readme\n\nSetup steps.\n');
     expect(catalog[0]?.metadata).toEqual({
       source: 'https://github.com/example/a-spec',
       syncedDate: '2026-03-10T12:34:10Z',
     });
+    expect(catalog[1]?.readmeContent).toBeNull();
     expect(catalog[1]?.metadata).toBeNull();
   });
 });
