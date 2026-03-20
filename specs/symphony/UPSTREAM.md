@@ -6,15 +6,15 @@ This directory vendors third-party specification content from `openai/symphony`.
 
 - Repository: `https://github.com/openai/symphony`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-19): `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`
+- Resolved commit at fetch time (2026-03-20): `a164593aacb3db4d6808adc5a87173d906726406`
 - License in upstream repo: top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs
 
-- `SPEC.md`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/SPEC.md`
-- `README.md`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/README.md`
-- `LICENSE`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/LICENSE`
-- `NOTICE`: `https://github.com/openai/symphony/blob/1f86bac53a84eb0e9f10d6546e3f19a5724a5b09/NOTICE`
+- `SPEC.md`: `https://github.com/openai/symphony/blob/a164593aacb3db4d6808adc5a87173d906726406/SPEC.md`
+- `README.md`: `https://github.com/openai/symphony/blob/a164593aacb3db4d6808adc5a87173d906726406/README.md`
+- `LICENSE`: `https://github.com/openai/symphony/blob/a164593aacb3db4d6808adc5a87173d906726406/LICENSE`
+- `NOTICE`: `https://github.com/openai/symphony/blob/a164593aacb3db4d6808adc5a87173d906726406/NOTICE`
 
 ## Import method
 
@@ -31,9 +31,9 @@ This directory vendors third-party specification content from `openai/symphony`.
 
 ## Modification status
 
-- `SPEC.md`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
-- `README.md`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
-- `LICENSE`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
-- `NOTICE`: unmodified copy of the upstream file at commit `1f86bac53a84eb0e9f10d6546e3f19a5724a5b09`.
+- `SPEC.md`: unmodified copy of the upstream file at commit `a164593aacb3db4d6808adc5a87173d906726406`.
+- `README.md`: unmodified copy of the upstream file at commit `a164593aacb3db4d6808adc5a87173d906726406`.
+- `LICENSE`: unmodified copy of the upstream file at commit `a164593aacb3db4d6808adc5a87173d906726406`.
+- `NOTICE`: unmodified copy of the upstream file at commit `a164593aacb3db4d6808adc5a87173d906726406`.
 - `metadata.json` is repository-local discovery metadata.
 - `UPSTREAM.md` is repository-local provenance metadata.
