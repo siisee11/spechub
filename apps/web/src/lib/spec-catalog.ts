@@ -22,6 +22,7 @@ export type SpecCatalogEntry = {
   name: string;
   description: string;
   specPath: string;
+  downloadCommand: string;
   implementPrompt: string;
   readmeContent?: string | null;
   metadata?: SpecMetadata | null;
@@ -105,6 +106,7 @@ export function buildSpecCatalog(
         name: parsed.name,
         description: parsed.description,
         specPath: `specs/${slug}`,
+        downloadCommand: buildInstallCommand(slug, repoSource),
         implementPrompt: buildImplementPrompt(slug, repoSource),
         readmeContent: file.readmeContent ?? null,
         metadata: file.metadata ?? null,

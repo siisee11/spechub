@@ -126,6 +126,8 @@ describe('buildSpecCatalog', () => {
         name: 'alpha',
         description: DEFAULT_SPEC_DESCRIPTION,
         specPath: 'specs/alpha',
+        downloadCommand:
+          'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "alpha"',
         implementPrompt:
           'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "alpha"` command and start implement that spec.',
         readmeContent: null,
@@ -139,6 +141,8 @@ describe('buildSpecCatalog', () => {
         name: 'Zeta',
         description: 'Zeta description.',
         specPath: 'specs/zeta',
+        downloadCommand:
+          'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "zeta"',
         implementPrompt:
           'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "zeta"` command and start implement that spec.',
         readmeContent: '# Zeta Readme\n\nReadme body.\n',
@@ -167,6 +171,8 @@ describe('buildSpecCatalog', () => {
         name: 'No Metadata',
         description: 'Demo spec.',
         specPath: 'specs/no-metadata',
+        downloadCommand:
+          'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "no-metadata"',
         implementPrompt:
           'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "no-metadata"` command and start implement that spec.',
         readmeContent: null,

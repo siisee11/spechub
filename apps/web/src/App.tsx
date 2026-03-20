@@ -2,18 +2,18 @@ import type { SpecCatalogEntry } from './lib/spec-catalog';
 import { renderMarkdown } from './lib/render-markdown';
 import './App.css';
 
-export async function defaultCopyImplementPrompt(prompt: string): Promise<void> {
-  await navigator.clipboard.writeText(prompt);
+export async function defaultCopyText(text: string): Promise<void> {
+  await navigator.clipboard.writeText(text);
 }
 
 type AppProps = {
   specs: SpecCatalogEntry[];
-  onCopyImplementPrompt?: (prompt: string) => void | Promise<void>;
+  onCopyText?: (text: string) => void | Promise<void>;
 };
 
 export default function App({
   specs,
-  onCopyImplementPrompt = defaultCopyImplementPrompt,
+  onCopyText = defaultCopyText,
 }: AppProps) {
   return (
     <main className="page">
@@ -59,23 +59,32 @@ export default function App({
                 </div>
               </dl>
               <pre className="install-command">{spec.implementPrompt}</pre>
+              <div className="actions">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void onCopyText(spec.implementPrompt);
+                  }}
+                  aria-label={`Copy implement prompt for ${spec.slug}`}
+                >
+                  Copy implement prompt
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void onCopyText(spec.downloadCommand);
+                  }}
+                  aria-label={`Copy download command for ${spec.slug}`}
+                >
+                  Copy download command
+                </button>
+              </div>
               {spec.readmeContent ? (
                 <section className="readme-section" aria-label={`README for ${spec.slug}`}>
                   <p className="readme-label">README</p>
                   <div className="readme-content">{renderMarkdown(spec.readmeContent)}</div>
                 </section>
               ) : null}
-              <div className="actions">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void onCopyImplementPrompt(spec.implementPrompt);
-                  }}
-                  aria-label={`Copy implement prompt for ${spec.slug}`}
-                >
-                  Copy implement prompt
-                </button>
-              </div>
             </article>
           ))}
         </section>

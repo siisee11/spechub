@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import App, { defaultCopyImplementPrompt } from './App';
+import App, { defaultCopyText } from './App';
 import type { SpecCatalogEntry } from './lib/spec-catalog';
 
 const SAMPLE_SPECS: SpecCatalogEntry[] = [
@@ -9,6 +9,8 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
     name: 'Harness Spec',
     description: 'Build a portable harness engineering system.',
     specPath: 'specs/harness-spec',
+    downloadCommand:
+      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "harness-spec"',
     implementPrompt:
       'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "harness-spec"` command and start implement that spec.',
     metadata: {
@@ -22,6 +24,8 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
     name: 'Docs Blueprint',
     description: 'Generate canonical docs structure.',
     specPath: 'specs/docs-blueprint',
+    downloadCommand:
+      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"',
     implementPrompt:
       'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"` command and start implement that spec.',
     metadata: null,
@@ -33,7 +37,7 @@ describe('App', () => {
   it('renders positioning copy, lists specs, and supports copy actions', () => {
     const copyMock = vi.fn();
 
-    render(<App specs={SAMPLE_SPECS} onCopyImplementPrompt={copyMock} />);
+    render(<App specs={SAMPLE_SPECS} onCopyText={copyMock} />);
 
     expect(screen.getByRole('heading', { name: 'SpecHub' })).toBeInTheDocument();
     expect(screen.getByText('Open community marketplace for sharable specs.')).toBeInTheDocument();
@@ -64,6 +68,10 @@ describe('App', () => {
     expect(copyMock).toHaveBeenCalledWith(
       'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"` command and start implement that spec.',
     );
+    fireEvent.click(screen.getByLabelText('Copy download command for docs-blueprint'));
+    expect(copyMock).toHaveBeenCalledWith(
+      'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"',
+    );
   });
 
   it('renders empty state when there are no specs', () => {
@@ -74,8 +82,8 @@ describe('App', () => {
   });
 });
 
-describe('defaultCopyImplementPrompt', () => {
-  it('writes implement prompt to navigator clipboard', async () => {
+describe('defaultCopyText', () => {
+  it('writes text to navigator clipboard', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {
       value: {
@@ -84,7 +92,7 @@ describe('defaultCopyImplementPrompt', () => {
       configurable: true,
     });
 
-    await defaultCopyImplementPrompt('echo hi');
+    await defaultCopyText('echo hi');
 
     expect(writeText).toHaveBeenCalledWith('echo hi');
   });
