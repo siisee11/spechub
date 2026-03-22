@@ -4,7 +4,16 @@ type MarkdownBlock =
   | { type: 'heading'; level: 1 | 2 | 3; content: string }
   | { type: 'paragraph'; content: string }
   | { type: 'list'; ordered: boolean; items: string[] }
-  | { type: 'code'; content: string };
+  | { type: 'code'; content: string }
+  | { type: 'image'; alt: string; src: string };
+
+function resolveMarkdownUrl(src: string, baseUrl?: string | null): string {
+  if (/^(https?:|data:)/.test(src) || !baseUrl) {
+    return src;
+  }
+
+  return new URL(src, baseUrl).toString();
+}
 
 function parseMarkdownBlocks(markdown: string): MarkdownBlock[] {
   const lines = markdown.split(/\r?\n/);
@@ -48,6 +57,17 @@ function parseMarkdownBlocks(markdown: string): MarkdownBlock[] {
       continue;
     }
 
+    const imageMatch = trimmed.match(/^!\[(.*)\]\((.+)\)$/);
+    if (imageMatch) {
+      blocks.push({
+        type: 'image',
+        alt: imageMatch[1].trim(),
+        src: imageMatch[2].trim(),
+      });
+      index += 1;
+      continue;
+    }
+
     const unorderedMatch = trimmed.match(/^[-*]\s+(.*)$/);
     const orderedMatch = trimmed.match(/^\d+\.\s+(.*)$/);
     if (unorderedMatch || orderedMatch) {
@@ -80,6 +100,7 @@ function parseMarkdownBlocks(markdown: string): MarkdownBlock[] {
         currentTrimmed === '' ||
         currentTrimmed.startsWith('```') ||
         /^#{1,3}\s+/.test(currentTrimmed) ||
+        /^!\[.*\]\(.+\)$/.test(currentTrimmed) ||
         /^[-*]\s+/.test(currentTrimmed) ||
         /^\d+\.\s+/.test(currentTrimmed)
       ) {
@@ -98,7 +119,7 @@ function parseMarkdownBlocks(markdown: string): MarkdownBlock[] {
   return blocks;
 }
 
-export function renderMarkdown(markdown: string): ReactNode[] {
+export function renderMarkdown(markdown: string, options?: { imageBaseUrl?: string | null }): ReactNode[] {
   return parseMarkdownBlocks(markdown).map((block, index) => {
     switch (block.type) {
       case 'heading':
@@ -130,6 +151,15 @@ export function renderMarkdown(markdown: string): ReactNode[] {
           <pre className="readme-code" key={`code-${index}`}>
             <code>{block.content}</code>
           </pre>
+        );
+      case 'image':
+        return (
+          <img
+            alt={block.alt}
+            className="readme-image"
+            key={`image-${index}`}
+            src={resolveMarkdownUrl(block.src, options?.imageBaseUrl)}
+          />
         );
     }
   });

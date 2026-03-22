@@ -9,6 +9,7 @@ export type SpecMarkdownFile = {
   path: string;
   content: string;
   readmeContent?: string | null;
+  readmeAssetBaseUrl?: string | null;
   metadata?: SpecMetadata | null;
 };
 
@@ -25,6 +26,7 @@ export type SpecCatalogEntry = {
   downloadCommand: string;
   implementPrompt: string;
   readmeContent?: string | null;
+  readmeAssetBaseUrl?: string | null;
   metadata?: SpecMetadata | null;
 };
 
@@ -109,6 +111,7 @@ export function buildSpecCatalog(
         downloadCommand: buildInstallCommand(slug, repoSource),
         implementPrompt: buildImplementPrompt(slug, repoSource),
         readmeContent: file.readmeContent ?? null,
+        readmeAssetBaseUrl: file.readmeAssetBaseUrl ?? null,
         metadata: file.metadata ?? null,
       } satisfies SpecCatalogEntry;
     })

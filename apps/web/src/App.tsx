@@ -82,7 +82,9 @@ export default function App({
               {spec.readmeContent ? (
                 <section className="readme-section" aria-label={`README for ${spec.slug}`}>
                   <p className="readme-label">README</p>
-                  <div className="readme-content">{renderMarkdown(spec.readmeContent)}</div>
+                  <div className="readme-content">
+                    {renderMarkdown(spec.readmeContent, { imageBaseUrl: spec.readmeAssetBaseUrl })}
+                  </div>
                 </section>
               ) : null}
             </article>

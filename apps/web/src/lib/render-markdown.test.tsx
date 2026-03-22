@@ -44,4 +44,34 @@ const ready = true;
 
     expect(screen.getByRole('heading', { level: 5, name: 'Deep Section' })).toBeInTheDocument();
   });
+
+  it('renders markdown images using the provided asset base url', () => {
+    render(
+      <div>
+        {renderMarkdown('![Architecture](./assets/architecture.png)\n', {
+          imageBaseUrl: 'https://raw.githubusercontent.com/openai/spechub/abc123/spec/',
+        })}
+      </div>,
+    );
+
+    expect(screen.getByRole('img', { name: 'Architecture' })).toHaveAttribute(
+      'src',
+      'https://raw.githubusercontent.com/openai/spechub/abc123/spec/assets/architecture.png',
+    );
+  });
+
+  it('keeps absolute image urls unchanged', () => {
+    render(
+      <div>
+        {renderMarkdown('![Remote Architecture](https://example.com/architecture.png)\n', {
+          imageBaseUrl: 'https://raw.githubusercontent.com/openai/spechub/abc123/spec/',
+        })}
+      </div>,
+    );
+
+    expect(screen.getByRole('img', { name: 'Remote Architecture' })).toHaveAttribute(
+      'src',
+      'https://example.com/architecture.png',
+    );
+  });
 });

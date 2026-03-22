@@ -17,7 +17,8 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
       source: 'https://github.com/siisee11/harness.spec',
       syncedDate: '2026-03-10T12:34:10Z',
     },
-    readmeContent: '# Overview\n\nPortable agent loop.\n',
+    readmeAssetBaseUrl: 'https://raw.githubusercontent.com/siisee11/harness.spec/abc123/spec/',
+    readmeContent: '# Overview\n\nPortable agent loop.\n\n![Diagram](./assets/diagram.png)\n',
   },
   {
     slug: 'docs-blueprint',
@@ -30,6 +31,7 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
       'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"` command and start implement that spec.',
     metadata: null,
     readmeContent: null,
+    readmeAssetBaseUrl: null,
   },
 ];
 
@@ -58,6 +60,10 @@ describe('App', () => {
     expect(screen.getByText('README')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 3, name: 'Overview' })).toBeInTheDocument();
     expect(screen.getByText('Portable agent loop.')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Diagram' })).toHaveAttribute(
+      'src',
+      'https://raw.githubusercontent.com/siisee11/harness.spec/abc123/spec/assets/diagram.png',
+    );
     expect(screen.queryByLabelText('Selected spec details')).not.toBeInTheDocument();
     expect(screen.queryByText('Selected spec')).not.toBeInTheDocument();
     expect(screen.getByText('Generate canonical docs structure.')).toBeInTheDocument();

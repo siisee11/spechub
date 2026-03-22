@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   buildSpecCatalog,
+  parseGitHubOwnerRepo,
   type RepoSource,
   type SpecCatalogEntry,
   type SpecMarkdownFile,
@@ -57,6 +58,30 @@ async function loadOptionalMarkdown(specRoot: string, filename: string): Promise
   }
 }
 
+function parseReadmeAssetBaseUrl(upstream: string, metadata: SpecMetadata | null): string | null {
+  if (!metadata) {
+    return null;
+  }
+
+  const ownerRepo = parseGitHubOwnerRepo(`${metadata.source}.git`);
+  const commitMatch = upstream.match(/Resolved commit at fetch time \(\d{4}-\d{2}-\d{2}\): `([0-9a-f]{40})`/);
+  if (!ownerRepo || !commitMatch?.[1]) {
+    return null;
+  }
+
+  const prefix = upstream.includes('Upstream `spec/` directory copied') ? 'spec/' : '';
+  return `https://raw.githubusercontent.com/${ownerRepo}/${commitMatch[1]}/${prefix}`;
+}
+
+async function loadReadmeAssetBaseUrl(specRoot: string, metadata: SpecMetadata | null): Promise<string | null> {
+  try {
+    const upstream = await readFile(path.join(specRoot, 'UPSTREAM.md'), 'utf8');
+    return parseReadmeAssetBaseUrl(upstream, metadata);
+  } catch {
+    return null;
+  }
+}
+
 export async function loadSpecMarkdownFilesFromRepository(repoRoot: string): Promise<SpecMarkdownFile[]> {
   const specsRoot = path.join(repoRoot, 'specs');
   let entries: Awaited<ReturnType<typeof readdir>>;
@@ -80,10 +105,12 @@ export async function loadSpecMarkdownFilesFromRepository(repoRoot: string): Pro
             loadOptionalMarkdown(specRoot, 'README.md'),
             loadSpecMetadata(specRoot),
           ]);
+          const readmeAssetBaseUrl = await loadReadmeAssetBaseUrl(specRoot, metadata);
           return {
             path: toPosixPath(path.relative(repoRoot, specPath)),
             content,
             readmeContent,
+            readmeAssetBaseUrl,
             metadata,
           } satisfies SpecMarkdownFile;
         } catch {
