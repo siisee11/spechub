@@ -191,21 +191,22 @@ export default function App({
                           <p className="slug">{spec.slug}</p>
                           <p className="spec-chip">{spec.readmeContent ? 'README attached' : 'Spec only'}</p>
                         </div>
-                        <h3>{spec.name}</h3>
-                        <p className="description">{spec.description}</p>
-                        <p className="spec-path">{spec.specPath}</p>
-                        <dl className="metadata-list">
-                          <div>
-                            <dt>Source</dt>
-                            <dd>{spec.metadata ? 'Linked' : 'Unknown'}</dd>
+                        <div className="spec-card-copy">
+                          <p className="spec-kicker">Implementation spec</p>
+                          <h3 className="spec-card-title">
+                            <span>{spec.name}</span>
+                          </h3>
+                          <p className="spec-card-description">{spec.description}</p>
+                        </div>
+                        <div className="spec-card-footer">
+                          <p className="spec-card-path">{spec.specPath}</p>
+                          <div className="spec-card-meta">
+                            <p className="spec-meta-pill">{spec.metadata ? 'Source linked' : 'Source pending'}</p>
+                            <p className="spec-meta-pill">
+                              {spec.metadata?.syncedDate ? 'Synced UTC' : 'Unsynced listing'}
+                            </p>
                           </div>
-                          <div>
-                            <dt>Synced date (UTC)</dt>
-                            <dd>
-                              <code>{spec.metadata?.syncedDate ?? 'Unknown'}</code>
-                            </dd>
-                          </div>
-                        </dl>
+                        </div>
                       </button>
                     </article>
                   );

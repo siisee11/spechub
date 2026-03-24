@@ -314,58 +314,55 @@ button {
 }
 
 .spec-card {
-  min-height: 17rem;
+  min-height: 19rem;
   overflow: hidden;
+  --card-accent: #f3ec89;
+  --card-shadow: rgba(31, 49, 41, 0.14);
 }
 
 .spec-card[data-accent='0'] {
+  --card-accent: #f4ef8a;
   background:
-    radial-gradient(circle at top left, rgba(255, 239, 199, 0.8), transparent 38%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 239, 0.9));
+    radial-gradient(circle at top left, rgba(255, 239, 199, 0.72), transparent 36%),
+    linear-gradient(180deg, #f3e9ff, #eadcff);
 }
 
 .spec-card[data-accent='1'] {
+  --card-accent: #1a1a1a;
   background:
     radial-gradient(circle at bottom right, rgba(216, 255, 221, 0.72), transparent 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 250, 244, 0.9));
+    linear-gradient(180deg, #dff4c4, #bee39e);
 }
 
 .spec-card[data-accent='2'] {
+  --card-accent: #ffea71;
   background:
     radial-gradient(circle at top right, rgba(219, 241, 255, 0.8), transparent 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 248, 255, 0.92));
+    linear-gradient(180deg, #dbeeff, #c2dbff);
 }
 
 .spec-card[data-accent='3'] {
+  --card-accent: #f8ec8b;
   background:
     radial-gradient(circle at bottom left, rgba(255, 221, 209, 0.72), transparent 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 245, 240, 0.92));
+    linear-gradient(180deg, #ffd9cd, #ffc4b0);
 }
 
 .spec-card-selected {
   transform: translateY(-2px);
-  box-shadow: 0 26px 56px rgba(31, 49, 41, 0.14);
+  box-shadow: 0 26px 56px var(--card-shadow);
 }
 
 .spec-select {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   width: 100%;
   height: 100%;
   border: 0;
   background: transparent;
-  padding: 1.1rem;
+  padding: 1.25rem;
   text-align: left;
-}
-
-.spec-select h3 {
-  margin: 1rem 0 0.55rem;
-  font-size: 1.45rem;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-}
-
-.spec-select .metadata-list {
-  margin-top: 1rem;
 }
 
 button {
@@ -394,6 +391,94 @@ button:focus-visible {
 .empty-state {
   margin-top: 1rem;
   padding: 1.4rem;
+}
+
+.spec-card-topline {
+  align-items: center;
+}
+
+.spec-card .slug {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+  padding: 0.42rem 0.72rem;
+  color: #202625;
+}
+
+.spec-chip {
+  background: rgba(255, 255, 255, 0.44);
+  color: #202625;
+}
+
+.spec-card-copy {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.spec-kicker {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(26, 35, 31, 0.68);
+}
+
+.spec-card-title {
+  margin: 0;
+  max-width: 10ch;
+  font-size: clamp(1.85rem, 2vw, 2.45rem);
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+  color: #161616;
+}
+
+.spec-card-title span {
+  display: inline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  border-radius: 18px;
+  background: var(--card-accent);
+  padding: 0.08em 0.3em 0.16em;
+}
+
+.spec-card-description {
+  margin: 0;
+  max-width: 24ch;
+  font-size: 1.04rem;
+  line-height: 1.48;
+  color: rgba(26, 35, 31, 0.82);
+}
+
+.spec-card-footer {
+  display: grid;
+  gap: 0.85rem;
+  border-top: 1px solid rgba(23, 36, 31, 0.12);
+  padding-top: 1rem;
+}
+
+.spec-card-path {
+  margin: 0;
+  font-family: "IBM Plex Mono", "SFMono-Regular", "SF Mono", monospace;
+  font-size: 0.8rem;
+  color: rgba(26, 35, 31, 0.7);
+}
+
+.spec-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.spec-meta-pill {
+  margin: 0;
+  border-radius: 999px;
+  background: rgba(22, 22, 22, 0.9);
+  padding: 0.48rem 0.74rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #f7f1db;
 }
 
 @media (max-width: 1100px) {

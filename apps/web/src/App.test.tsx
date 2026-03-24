@@ -58,10 +58,15 @@ describe('App', () => {
     expect(screen.getByLabelText('Spec catalog')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Select harness-spec' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Select docs-blueprint' })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getAllByText('Source')).toHaveLength(3);
-    expect(screen.getAllByText('Synced date (UTC)')).toHaveLength(3);
+    expect(screen.getAllByText('Implementation spec')).toHaveLength(2);
+    expect(screen.getByText('Source linked')).toBeInTheDocument();
+    expect(screen.getByText('Source pending')).toBeInTheDocument();
+    expect(screen.getByText('Unsynced listing')).toBeInTheDocument();
+    expect(screen.getByText('Synced UTC')).toBeInTheDocument();
+    expect(screen.getByText('Source')).toBeInTheDocument();
+    expect(screen.getByText('Synced date (UTC)')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).toBeInTheDocument();
-    expect(screen.getAllByText('2026-03-10T12:34:10Z')).toHaveLength(2);
+    expect(screen.getByText('2026-03-10T12:34:10Z')).toBeInTheDocument();
     expect(screen.getByText('README')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 3, name: 'Overview' })).toBeInTheDocument();
     expect(screen.getByText('Portable agent loop.')).toBeInTheDocument();
@@ -70,7 +75,7 @@ describe('App', () => {
       'https://raw.githubusercontent.com/siisee11/harness.spec/abc123/spec/assets/diagram.png',
     );
     expect(screen.getByText('Generate canonical docs structure.')).toBeInTheDocument();
-    expect(screen.getAllByText('Unknown')).toHaveLength(2);
+    expect(screen.queryByText('Unknown')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Select docs-blueprint' }));
 
@@ -79,7 +84,7 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Select docs-blueprint' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.queryByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).not.toBeInTheDocument();
     expect(screen.queryByText('Portable agent loop.')).not.toBeInTheDocument();
-    expect(screen.getAllByText('Unknown')).toHaveLength(4);
+    expect(screen.getAllByText('Unknown')).toHaveLength(2);
     expect(screen.queryByLabelText('README for docs-blueprint')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('Copy implement prompt for docs-blueprint'));
