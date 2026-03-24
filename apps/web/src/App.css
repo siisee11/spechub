@@ -8,7 +8,7 @@
 .panel {
   border: 1px solid var(--line-strong);
   border-radius: 0;
-  background: linear-gradient(180deg, rgba(26, 26, 26, 0.98), rgba(17, 17, 17, 0.98));
+  background: linear-gradient(180deg, #ece7dd, #e5dfd4);
   box-shadow: none;
 }
 
@@ -26,8 +26,8 @@
   grid-column: span 6;
   min-height: 20rem;
   background:
-    radial-gradient(circle at top right, rgba(243, 239, 136, 0.16), transparent 34%),
-    linear-gradient(145deg, #1d1d1d, #111111);
+    radial-gradient(circle at top right, rgba(255, 244, 155, 0.35), transparent 34%),
+    linear-gradient(145deg, #efe4f0, #e9dfef);
 }
 
 .hero-metric {
@@ -36,13 +36,35 @@
   min-height: 12rem;
   flex-direction: column;
   justify-content: space-between;
-  background: linear-gradient(180deg, #313131, #232323);
 }
 
 .hero-note {
   grid-column: span 6;
   min-height: 12rem;
-  background: linear-gradient(180deg, #202020, #141414);
+}
+
+.hero-metric[aria-label='Catalog coverage'] {
+  background: linear-gradient(180deg, #5d9b73, #4c875f);
+  color: #f6f2db;
+}
+
+.hero-metric[aria-label='Catalog sync'] {
+  background: linear-gradient(180deg, #717171, #636363);
+  color: #f5f08a;
+}
+
+.hero-note[aria-label='How SpecHub works'] {
+  background: linear-gradient(180deg, #d8d2f2, #cec6ef);
+}
+
+.hero-note[aria-label='README availability'] {
+  background: linear-gradient(180deg, #d6dce1, #ccd2d8);
+}
+
+.hero-metric .section-label,
+.hero-metric .metric-caption,
+.hero-metric .metric-value {
+  color: inherit;
 }
 
 .eyebrow,
@@ -119,6 +141,9 @@
 
 .selected-spec {
   padding: 1.5rem;
+  background:
+    linear-gradient(180deg, #ece7dd, #e5dfd4),
+    #ece7dd;
 }
 
 .selected-spec-header,
@@ -138,15 +163,15 @@
 .selected-status,
 .spec-chip {
   margin: 0;
-  border: 1px solid rgba(244, 240, 217, 0.16);
+  border: 1px solid rgba(17, 17, 17, 0.22);
   border-radius: 0;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(17, 17, 17, 0.92);
   padding: 0.45rem 0.8rem;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ink-strong);
+  color: #f7f1db;
 }
 
 .selected-spec h2 {
@@ -200,7 +225,7 @@ button {
   display: grid;
   gap: 0.25rem;
   border-radius: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.4);
   padding: 0.85rem 0.95rem;
 }
 
@@ -226,14 +251,19 @@ button {
 }
 
 .command-card {
-  border: 1px solid rgba(244, 240, 217, 0.08);
+  border: 1px solid rgba(17, 17, 17, 0.12);
   border-radius: 0;
-  background: linear-gradient(180deg, rgba(32, 32, 32, 0.96), rgba(17, 17, 17, 0.96));
+  background: linear-gradient(180deg, rgba(245, 242, 235, 0.98), rgba(237, 233, 225, 0.98));
   padding: 1rem;
 }
 
 .command-card-header {
   margin-bottom: 0.8rem;
+}
+
+.command-card .section-label,
+.command-card .command-caption {
+  color: var(--ink-soft);
 }
 
 .command-caption {
@@ -243,7 +273,7 @@ button {
 
 .install-command {
   margin: 0;
-  border: 1px solid rgba(244, 240, 217, 0.08);
+  border: 1px solid rgba(17, 17, 17, 0.12);
   border-radius: 0;
   background: #090909;
   padding: 1rem;
@@ -256,7 +286,7 @@ button {
 
 .readme-section {
   margin-top: 1.2rem;
-  border-top: 1px solid rgba(23, 36, 31, 0.1);
+  border-top: 1px solid rgba(17, 17, 17, 0.12);
   padding-top: 1.2rem;
 }
 
@@ -288,7 +318,7 @@ button {
 
 .readme-code {
   margin: 0.6rem 0;
-  border: 1px solid rgba(244, 240, 217, 0.14);
+  border: 1px solid rgba(17, 17, 17, 0.14);
   border-radius: 0;
   background: #101010;
   padding: 0.8rem;
@@ -302,7 +332,7 @@ button {
   display: block;
   max-width: 100%;
   margin: 0.75rem 0;
-  border: 1px solid rgba(244, 240, 217, 0.14);
+  border: 1px solid rgba(17, 17, 17, 0.14);
   border-radius: 0;
 }
 
@@ -317,34 +347,35 @@ button {
   overflow: hidden;
   --card-accent: #f3ec89;
   --card-shadow: rgba(0, 0, 0, 0.3);
+  color: #111111;
 }
 
 .spec-card[data-accent='0'] {
-  --card-accent: #f4ef8a;
+  --card-accent: #f5ef87;
   background:
-    radial-gradient(circle at top left, rgba(244, 239, 138, 0.2), transparent 36%),
-    linear-gradient(180deg, #1d1d1d, #131313);
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.24), transparent 34%),
+    linear-gradient(180deg, #e8dbf5, #dfd1f0);
 }
 
 .spec-card[data-accent='1'] {
-  --card-accent: #f3ef88;
+  --card-accent: #f4ef87;
   background:
-    radial-gradient(circle at bottom right, rgba(151, 209, 129, 0.22), transparent 36%),
-    linear-gradient(180deg, #223721, #162616);
+    radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.18), transparent 34%),
+    linear-gradient(180deg, #b9e090, #a1cf6f);
 }
 
 .spec-card[data-accent='2'] {
-  --card-accent: #ffea71;
+  --card-accent: #f6ef88;
   background:
-    radial-gradient(circle at top right, rgba(167, 200, 255, 0.22), transparent 36%),
-    linear-gradient(180deg, #1d2838, #141b28);
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.2), transparent 34%),
+    linear-gradient(180deg, #bdd8f7, #a8c8ee);
 }
 
 .spec-card[data-accent='3'] {
-  --card-accent: #f8ec8b;
+  --card-accent: #f6ef88;
   background:
-    radial-gradient(circle at bottom left, rgba(255, 187, 156, 0.22), transparent 36%),
-    linear-gradient(180deg, #3a2321, #261514);
+    radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.22), transparent 34%),
+    linear-gradient(180deg, #f5c3b4, #edb09f);
 }
 
 .spec-card-selected {
@@ -365,13 +396,13 @@ button {
 }
 
 button {
-  border: 1px solid rgba(244, 240, 217, 0.16);
+  border: 1px solid rgba(17, 17, 17, 0.18);
   border-radius: 0;
-  background: linear-gradient(180deg, #292929, #181818);
+  background: linear-gradient(180deg, #111111, #1b1b1b);
   padding: 0.7rem 1rem;
   font-size: 0.79rem;
   cursor: pointer;
-  color: var(--ink-strong);
+  color: #f7f1db;
   transition:
     transform 140ms ease,
     box-shadow 140ms ease,
@@ -399,14 +430,14 @@ button:focus-visible {
 
 .spec-card .slug {
   border-radius: 0;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(17, 17, 17, 0.92);
   padding: 0.42rem 0.72rem;
-  color: var(--ink-strong);
+  color: #f7f1db;
 }
 
 .spec-chip {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--ink-strong);
+  background: rgba(255, 255, 255, 0.52);
+  color: #111111;
 }
 
 .spec-card-copy {
@@ -420,7 +451,7 @@ button:focus-visible {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(244, 240, 217, 0.66);
+  color: rgba(17, 17, 17, 0.6);
 }
 
 .spec-card-title {
@@ -429,7 +460,7 @@ button:focus-visible {
   font-size: clamp(1.85rem, 2vw, 2.45rem);
   line-height: 0.98;
   letter-spacing: -0.06em;
-  color: var(--ink-strong);
+  color: #111111;
 }
 
 .spec-card-title span {
@@ -447,13 +478,13 @@ button:focus-visible {
   max-width: 24ch;
   font-size: 1.04rem;
   line-height: 1.48;
-  color: rgba(244, 240, 217, 0.82);
+  color: rgba(17, 17, 17, 0.8);
 }
 
 .spec-card-footer {
   display: grid;
   gap: 0.85rem;
-  border-top: 1px solid rgba(244, 240, 217, 0.12);
+  border-top: 1px solid rgba(17, 17, 17, 0.14);
   padding-top: 1rem;
 }
 
@@ -461,7 +492,7 @@ button:focus-visible {
   margin: 0;
   font-family: "IBM Plex Mono", "SFMono-Regular", "SF Mono", monospace;
   font-size: 0.8rem;
-  color: rgba(244, 240, 217, 0.66);
+  color: rgba(17, 17, 17, 0.58);
 }
 
 .spec-card-meta {

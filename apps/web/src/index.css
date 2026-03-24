@@ -1,16 +1,16 @@
 :root {
-  color: #f4f0d9;
+  color: #111111;
   background:
-    radial-gradient(circle at top left, rgba(73, 126, 97, 0.18) 0%, transparent 28%),
-    radial-gradient(circle at bottom right, rgba(122, 95, 177, 0.14) 0%, transparent 26%),
-    linear-gradient(180deg, #0c0c0c 0%, #141414 100%);
+    radial-gradient(circle at top left, rgba(97, 156, 122, 0.14) 0%, transparent 28%),
+    radial-gradient(circle at bottom right, rgba(176, 150, 224, 0.12) 0%, transparent 26%),
+    linear-gradient(180deg, #090909 0%, #121212 100%);
   font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
-  --surface-0: #171717;
-  --line-strong: rgba(255, 248, 214, 0.12);
-  --ink-strong: #f4f0d9;
-  --ink-soft: #cac2a6;
-  --ink-muted: #9a937e;
-  --accent-deep: #f3ef88;
+  --surface-0: #ece7dd;
+  --line-strong: rgba(0, 0, 0, 0.45);
+  --ink-strong: #111111;
+  --ink-soft: #3b372f;
+  --ink-muted: #665f55;
+  --accent-deep: #1f4c7a;
 }
 
 * {
