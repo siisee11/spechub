@@ -7,6 +7,16 @@ export async function defaultCopyText(text: string): Promise<void> {
   await navigator.clipboard.writeText(text);
 }
 
+export function splitSpecCardTitle(title: string): string[] {
+  const words = title.trim().split(/\s+/).filter(Boolean);
+
+  if (words.length < 2) {
+    return [title];
+  }
+
+  return [words.slice(0, -1).join(' '), words.at(-1)!];
+}
+
 type AppProps = {
   specs: SpecCatalogEntry[];
   onCopyText?: (text: string) => void | Promise<void>;
@@ -194,7 +204,9 @@ export default function App({
                         <div className="spec-card-copy">
                           <p className="spec-kicker">Implementation spec</p>
                           <h3 className="spec-card-title">
-                            <span>{spec.name}</span>
+                            {splitSpecCardTitle(spec.name).map((titleLine) => (
+                              <span key={`${spec.slug}-${titleLine}`}>{titleLine}</span>
+                            ))}
                           </h3>
                           <p className="spec-card-description">{spec.description}</p>
                         </div>

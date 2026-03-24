@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import App, { defaultCopyText } from './App';
+import App, { defaultCopyText, splitSpecCardTitle } from './App';
 import type { SpecCatalogEntry } from './lib/spec-catalog';
 
 const SAMPLE_SPECS: SpecCatalogEntry[] = [
@@ -118,5 +118,13 @@ describe('defaultCopyText', () => {
     await defaultCopyText('echo hi');
 
     expect(writeText).toHaveBeenCalledWith('echo hi');
+  });
+});
+
+describe('splitSpecCardTitle', () => {
+  it('splits the final word into its own highlighted line', () => {
+    expect(splitSpecCardTitle('Ralph Loop Spec')).toEqual(['Ralph Loop', 'Spec']);
+    expect(splitSpecCardTitle('Symphony Service Specification')).toEqual(['Symphony Service', 'Specification']);
+    expect(splitSpecCardTitle('Spec')).toEqual(['Spec']);
   });
 });
