@@ -6,7 +6,7 @@ This directory vendors third-party specification content from `siisee11/symphony
 
 - Repository: `https://github.com/siisee11/symphony-monitor.spec`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-22): `43e48faac68c28f5164005ce4713982075f54df0`
+- Resolved commit at fetch time (2026-03-24): `43e48faac68c28f5164005ce4713982075f54df0`
 - License in upstream repo: no top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs

@@ -6,7 +6,7 @@ This directory vendors third-party specification content from `openai/symphony`.
 
 - Repository: `https://github.com/openai/symphony`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-22): `a164593aacb3db4d6808adc5a87173d906726406`
+- Resolved commit at fetch time (2026-03-24): `a164593aacb3db4d6808adc5a87173d906726406`
 - License in upstream repo: top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs
