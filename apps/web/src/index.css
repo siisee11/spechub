@@ -1,9 +1,36 @@
 :root {
-  color: #121212;
-  background: linear-gradient(180deg, #f8f6ef 0%, #ffffff 100%);
+  color: #1a231f;
+  background:
+    radial-gradient(circle at top left, #fff1c7 0%, transparent 26%),
+    radial-gradient(circle at bottom right, #dff6dc 0%, transparent 24%),
+    linear-gradient(180deg, #f7f1e6 0%, #fffefb 52%, #f2f7f2 100%);
+  font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+  --surface-0: #fffdf7;
+  --line-strong: rgba(23, 36, 31, 0.12);
+  --ink-strong: #1a231f;
+  --ink-soft: #435248;
+  --ink-muted: #6e7c73;
+  --accent-deep: #0a5e56;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  background: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+code {
+  font-family: "IBM Plex Mono", "SFMono-Regular", "SF Mono", monospace;
 }

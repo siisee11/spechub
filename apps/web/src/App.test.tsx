@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import App, { defaultCopyText } from './App';
 import type { SpecCatalogEntry } from './lib/spec-catalog';
@@ -50,13 +50,18 @@ describe('App', () => {
           'Each implement prompt tells the agent how to download the full spec folder, including files next to SPEC.md.',
       ),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText('Catalog coverage')).toBeInTheDocument();
+    expect(screen.getByLabelText('How SpecHub works')).toBeInTheDocument();
+    expect(screen.getByLabelText('README availability')).toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: 'Harness Spec' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
-    expect(screen.getAllByText('Source')).toHaveLength(2);
-    expect(screen.getAllByText('Synced date (UTC)')).toHaveLength(2);
+    expect(screen.getByLabelText('Selected spec details')).toBeInTheDocument();
+    expect(screen.getByLabelText('Spec catalog')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select harness-spec' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Select docs-blueprint' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getAllByText('Source')).toHaveLength(3);
+    expect(screen.getAllByText('Synced date (UTC)')).toHaveLength(3);
     expect(screen.getByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).toBeInTheDocument();
-    expect(screen.getByText('2026-03-10T12:34:10Z')).toBeInTheDocument();
+    expect(screen.getAllByText('2026-03-10T12:34:10Z')).toHaveLength(2);
     expect(screen.getByText('README')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 3, name: 'Overview' })).toBeInTheDocument();
     expect(screen.getByText('Portable agent loop.')).toBeInTheDocument();
@@ -64,10 +69,17 @@ describe('App', () => {
       'src',
       'https://raw.githubusercontent.com/siisee11/harness.spec/abc123/spec/assets/diagram.png',
     );
-    expect(screen.queryByLabelText('Selected spec details')).not.toBeInTheDocument();
-    expect(screen.queryByText('Selected spec')).not.toBeInTheDocument();
     expect(screen.getByText('Generate canonical docs structure.')).toBeInTheDocument();
     expect(screen.getAllByText('Unknown')).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select docs-blueprint' }));
+
+    const selectedDetails = screen.getByLabelText('Selected spec details');
+    expect(within(selectedDetails).getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select docs-blueprint' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Portable agent loop.')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Unknown')).toHaveLength(4);
     expect(screen.queryByLabelText('README for docs-blueprint')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('Copy implement prompt for docs-blueprint'));
