@@ -112,7 +112,7 @@
 .catalog-layout {
   margin-top: 1rem;
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr);
+  grid-template-columns: minmax(0, 1.18fr) minmax(360px, 1fr);
   gap: 1rem;
   align-items: start;
 }
@@ -309,7 +309,7 @@ button {
 
 .spec-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
 }
 
@@ -491,6 +491,10 @@ button:focus-visible {
   .catalog-layout {
     grid-template-columns: 1fr;
   }
+
+  .spec-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
@@ -499,7 +503,6 @@ button:focus-visible {
   }
 
   .hero-grid,
-  .spec-list,
   .metadata-grid {
     grid-template-columns: 1fr;
   }
