@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { access, cp, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -27,6 +27,11 @@ type DownloadedRepo = {
 };
 
 type SyncMode = "full-repo" | "spec-subdir" | "spec-only";
+
+type SpecIgnore = {
+  patterns: string[];
+  ignores: (repoRelativePath: string) => boolean;
+};
 
 type SyncDependencies = {
   downloadUpstreamRepository?: (options: { ownerRepo: string; ref: string }) => Promise<DownloadedRepo>;
@@ -85,6 +90,7 @@ export async function syncSingleSpec(
   const downloaded = await downloader({ ownerRepo, ref });
 
   try {
+    const specIgnore = await loadSpecIgnore(downloaded.root);
     const upstreamSpecDir = join(downloaded.root, "spec");
     const hasUpstreamSpecDir = await pathExists(upstreamSpecDir);
     let mode: SyncMode;
@@ -100,15 +106,27 @@ export async function syncSingleSpec(
       mode = "spec-subdir";
       upstreamCopyRoot = upstreamSpecDir;
       upstreamPathPrefix = "spec/";
-      syncedFiles = await replaceSpecDirectoryFromRepository(upstreamSpecDir, specDir);
+      syncedFiles = await replaceSpecDirectoryFromRepository({
+        upstreamRepoRoot: downloaded.root,
+        sourcePrefix: "spec/",
+        targetRoot: specDir,
+        specIgnore,
+        requiredSpecPath: "spec/SPEC.md",
+      });
     } else if (repoName.endsWith(".spec")) {
       mode = "full-repo";
       upstreamCopyRoot = downloaded.root;
-      syncedFiles = await replaceSpecDirectoryFromRepository(downloaded.root, specDir);
+      syncedFiles = await replaceSpecDirectoryFromRepository({
+        upstreamRepoRoot: downloaded.root,
+        sourcePrefix: "",
+        targetRoot: specDir,
+        specIgnore,
+        requiredSpecPath: "SPEC.md",
+      });
     } else {
       mode = "spec-only";
       upstreamCopyRoot = downloaded.root;
-      syncedFiles = await replaceSpecFilesFromRepository(downloaded.root, specDir);
+      syncedFiles = await replaceSpecFilesFromRepository(downloaded.root, specDir, specIgnore);
     }
 
     await writeFile(
@@ -124,6 +142,7 @@ export async function syncSingleSpec(
         upstreamRepoRoot: downloaded.root,
         upstreamPathPrefix,
         syncedFiles,
+        ignoredPatterns: specIgnore.patterns,
         syncedAt: syncTime,
       }),
     );
@@ -183,24 +202,142 @@ async function readRecordedRef(specDir: string): Promise<string> {
   return "main";
 }
 
-async function replaceSpecDirectoryFromRepository(sourceRoot: string, targetRoot: string): Promise<string[]> {
-  await clearDirectoryExcept(targetRoot, REPO_LOCAL_FILES);
-  const entries = await readdir(sourceRoot, { withFileTypes: true });
-  const syncedFiles: string[] = [];
+function normalizePathFragment(value: string): string {
+  return value.replaceAll("\\", "/").replace(/^\.\/+/, "").replace(/^\/+/, "").replace(/\/+/g, "/");
+}
 
-  for (const entry of entries) {
-    if (entry.name === GIT_METADATA_DIRECTORY) {
+function patternHasGlob(pattern: string): boolean {
+  return /[*?]/.test(pattern);
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[|\\{}()[\]^$+?.]/g, "\\$&");
+}
+
+function globToRegexSource(pattern: string): string {
+  let source = "";
+
+  for (let index = 0; index < pattern.length; index += 1) {
+    const current = pattern[index];
+    const next = pattern[index + 1];
+
+    if (current === "*" && next === "*") {
+      source += ".*";
+      index += 1;
       continue;
     }
 
-    const sourcePath = join(sourceRoot, entry.name);
-    const targetPath = join(targetRoot, entry.name);
-    await cp(sourcePath, targetPath, { recursive: true, force: true });
-    if (entry.isDirectory()) {
-      syncedFiles.push(...(await listRelativeFiles(targetRoot, entry.name)));
-    } else {
-      syncedFiles.push(entry.name);
+    if (current === "*") {
+      source += "[^/]*";
+      continue;
     }
+
+    if (current === "?") {
+      source += "[^/]";
+      continue;
+    }
+
+    source += escapeRegex(current);
+  }
+
+  return source;
+}
+
+function compileSpecIgnorePattern(rawPattern: string): ((repoRelativePath: string) => boolean) | null {
+  const trimmed = rawPattern.trim();
+  if (trimmed === "" || trimmed.startsWith("#")) {
+    return null;
+  }
+
+  const directoryOnly = trimmed.endsWith("/");
+  const anchored = trimmed.startsWith("/");
+  const normalizedPattern = normalizePathFragment(trimmed.replace(/\/+$/, ""));
+  if (normalizedPattern === "") {
+    return null;
+  }
+
+  const hasSlash = normalizedPattern.includes("/");
+  const hasGlob = patternHasGlob(normalizedPattern);
+
+  if (!hasGlob) {
+    if (anchored || hasSlash) {
+      return (repoRelativePath) =>
+        repoRelativePath === normalizedPattern || repoRelativePath.startsWith(`${normalizedPattern}/`);
+    }
+
+    return (repoRelativePath) => {
+      const parts = repoRelativePath.split("/");
+      return parts.includes(normalizedPattern);
+    };
+  }
+
+  const regexSource = globToRegexSource(normalizedPattern);
+  const regex = anchored || hasSlash
+    ? new RegExp(`^${regexSource}${directoryOnly ? "(?:/.*)?" : ""}$`)
+    : new RegExp(`(?:^|/)${regexSource}${directoryOnly ? "(?:/.*)?" : ""}$`);
+
+  return (repoRelativePath) => regex.test(repoRelativePath);
+}
+
+async function loadSpecIgnore(upstreamRepoRoot: string): Promise<SpecIgnore> {
+  try {
+    const raw = await readFile(join(upstreamRepoRoot, ".specignore"), "utf8");
+    const patterns = raw
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line !== "" && !line.startsWith("#"));
+    const matchers = patterns
+      .map((pattern) => compileSpecIgnorePattern(pattern))
+      .filter((matcher): matcher is (repoRelativePath: string) => boolean => matcher !== null);
+
+    return {
+      patterns,
+      ignores: (repoRelativePath) => matchers.some((matcher) => matcher(repoRelativePath)),
+    };
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return {
+        patterns: [],
+        ignores: () => false,
+      };
+    }
+    throw error;
+  }
+}
+
+async function replaceSpecDirectoryFromRepository(options: {
+  upstreamRepoRoot: string;
+  sourcePrefix: string;
+  targetRoot: string;
+  specIgnore: SpecIgnore;
+  requiredSpecPath: string;
+}): Promise<string[]> {
+  await clearDirectoryExcept(options.targetRoot, REPO_LOCAL_FILES);
+  if (options.specIgnore.ignores(options.requiredSpecPath)) {
+    throw new Error(`required spec file is ignored by upstream .specignore: ${options.requiredSpecPath}`);
+  }
+
+  const allRepoFiles = await listRelativeFiles(options.upstreamRepoRoot);
+  const syncedFiles: string[] = [];
+
+  for (const repoRelativePath of allRepoFiles) {
+    if (!repoRelativePath.startsWith(options.sourcePrefix)) {
+      continue;
+    }
+    if (options.specIgnore.ignores(repoRelativePath)) {
+      continue;
+    }
+
+    const targetRelativePath = options.sourcePrefix === "" ? repoRelativePath : repoRelativePath.slice(options.sourcePrefix.length);
+    const sourcePath = join(options.upstreamRepoRoot, repoRelativePath);
+    const targetPath = join(options.targetRoot, targetRelativePath);
+    await mkdir(join(targetPath, ".."), { recursive: true });
+    await cp(sourcePath, targetPath, { force: true });
+    syncedFiles.push(targetRelativePath);
+  }
+
+  if (!syncedFiles.includes("SPEC.md")) {
+    throw new Error(`missing synced SPEC.md after applying upstream .specignore under ${options.upstreamRepoRoot}`);
   }
 
   return syncedFiles.sort();
@@ -217,10 +354,21 @@ async function clearDirectoryExcept(targetRoot: string, preservedNames: Set<stri
   }
 }
 
-async function replaceSpecFilesFromRepository(sourceRoot: string, targetRoot: string): Promise<string[]> {
+async function replaceSpecFilesFromRepository(
+  sourceRoot: string,
+  targetRoot: string,
+  specIgnore: SpecIgnore,
+): Promise<string[]> {
   const syncedFiles: string[] = [];
 
   for (const filename of SPEC_ONLY_FILES) {
+    if (specIgnore.ignores(filename)) {
+      if (filename === "SPEC.md") {
+        throw new Error("required spec file is ignored by upstream .specignore: SPEC.md");
+      }
+      continue;
+    }
+
     const sourcePath = join(sourceRoot, filename);
     if (!(await pathExists(sourcePath))) {
       if (filename === "SPEC.md") {
@@ -309,6 +457,7 @@ async function renderUpstreamMetadata(options: {
   upstreamRepoRoot: string;
   upstreamPathPrefix: string;
   syncedFiles: string[];
+  ignoredPatterns: string[];
   syncedAt: Date;
 }): Promise<string> {
   const hashes = await Promise.all(
@@ -335,23 +484,33 @@ async function renderUpstreamMetadata(options: {
       ? [
           "- Vendored snapshot copy under the corresponding `specs/<slug>/` directory.",
           "- Upstream git metadata (`.git/`) excluded.",
-          "- Imported payload mirrors upstream tracked files at the resolved commit.",
+          options.ignoredPatterns.length > 0
+            ? "- Imported payload mirrors upstream tracked files at the resolved commit except paths matched by upstream `.specignore`."
+            : "- Imported payload mirrors upstream tracked files at the resolved commit.",
         ]
       : options.mode === "spec-subdir"
         ? [
             "- Upstream `spec/` directory copied into the corresponding `specs/<slug>/` directory.",
             `- Synced files: ${options.syncedFiles.map((relativePath) => `\`${relativePath}\``).join(", ")}.`,
             "- Repository-local metadata files are preserved.",
-          ]
+        ]
       : [
           "- Selected upstream files copied into the corresponding `specs/<slug>/` directory.",
           `- Synced files: ${options.syncedFiles.map((relativePath) => `\`${relativePath}\``).join(", ")}.`,
           "- Repository-local metadata files are preserved.",
         ];
+  if (options.ignoredPatterns.length > 0) {
+    importMethodLines.push(
+      `- Upstream \`.specignore\` patterns applied: ${options.ignoredPatterns.map((pattern) => `\`${pattern}\``).join(", ")}.`,
+    );
+  }
   const modificationStatusLines =
     options.mode === "full-repo"
       ? [
           `- All files except \`metadata.json\` and \`UPSTREAM.md\` are unmodified copies of upstream tracked files at commit \`${options.resolvedCommit}\`.`,
+          ...(options.ignoredPatterns.length > 0
+            ? ["- Files matched by upstream `.specignore` were intentionally not imported."]
+            : []),
           "- `metadata.json` is repository-local discovery metadata.",
           "- `UPSTREAM.md` is repository-local provenance metadata.",
         ]
@@ -360,6 +519,9 @@ async function renderUpstreamMetadata(options: {
             (relativePath) =>
               `- \`${relativePath}\`: unmodified copy of the upstream file at commit \`${options.resolvedCommit}\`.`,
           ),
+          ...(options.ignoredPatterns.length > 0
+            ? ["- Files matched by upstream `.specignore` were intentionally not imported."]
+            : []),
           "- `metadata.json` is repository-local discovery metadata.",
           "- `UPSTREAM.md` is repository-local provenance metadata.",
         ];

@@ -309,3 +309,120 @@ test("sync-specs mirrors upstream spec directory when non-.spec repositories exp
   expect(upstreamMetadata).toContain("- `notes.md`: `https://github.com/example/product-app/blob/fedcba9876543210fedcba9876543210fedcba98/spec/notes.md`");
   expect(upstreamMetadata).toContain("- Upstream `spec/` directory copied into the corresponding `specs/<slug>/` directory.");
 });
+
+test("sync-specs applies upstream .specignore patterns during full-repo sync", async () => {
+  const repoRoot = await createTempRepo();
+  await createSpec(repoRoot, "ignored-spec", {
+    metadataSource: "https://github.com/example/ignored.spec",
+    files: {
+      "SPEC.md": "old spec\n",
+      "notes.md": "old notes\n",
+    },
+  });
+
+  const upstreamRoot = await createUpstreamRoot({
+    ".specignore": ["# upstream exclusions", "notes.md", "nested/", "*.bak"].join("\n"),
+    "SPEC.md": "fresh spec\n",
+    "notes.md": "ignore me\n",
+    "keep.md": "keep me\n",
+    "nested/asset.txt": "ignore nested\n",
+    "scratch.bak": "ignore glob\n",
+  });
+
+  const results = await syncSpecs(repoRoot, {
+    slugs: ["ignored-spec"],
+    now: () => new Date("2026-03-11T10:11:12.000Z"),
+    log: () => {},
+    downloadUpstreamRepository: async () => ({
+      root: upstreamRoot,
+      resolvedCommit: "9999999999999999999999999999999999999999",
+      cleanup: async () => {},
+    }),
+  });
+
+  expect(results).toEqual([
+    {
+      slug: "ignored-spec",
+      ownerRepo: "example/ignored.spec",
+      ref: "main",
+      mode: "full-repo",
+    },
+  ]);
+  expect(await readFile(join(repoRoot, "specs/ignored-spec/SPEC.md"), "utf8")).toBe("fresh spec\n");
+  expect(await readFile(join(repoRoot, "specs/ignored-spec/keep.md"), "utf8")).toBe("keep me\n");
+  expect(access(join(repoRoot, "specs/ignored-spec/notes.md"), constants.F_OK)).rejects.toBeDefined();
+  expect(access(join(repoRoot, "specs/ignored-spec/nested/asset.txt"), constants.F_OK)).rejects.toBeDefined();
+  expect(access(join(repoRoot, "specs/ignored-spec/scratch.bak"), constants.F_OK)).rejects.toBeDefined();
+
+  const upstreamMetadata = await readFile(join(repoRoot, "specs/ignored-spec/UPSTREAM.md"), "utf8");
+  expect(upstreamMetadata).toContain(
+    "Imported payload mirrors upstream tracked files at the resolved commit except paths matched by upstream `.specignore`.",
+  );
+  expect(upstreamMetadata).toContain("- Upstream `.specignore` patterns applied: `notes.md`, `nested/`, `*.bak`.");
+  expect(upstreamMetadata).toContain("- Files matched by upstream `.specignore` were intentionally not imported.");
+});
+
+test("sync-specs applies repo-root .specignore patterns during spec-subdir sync", async () => {
+  const repoRoot = await createTempRepo();
+  await createSpec(repoRoot, "ignored-subdir", {
+    metadataSource: "https://github.com/example/ignored-subdir.spec",
+    files: {
+      "SPEC.md": "old spec\n",
+    },
+  });
+
+  const upstreamRoot = await createUpstreamRoot({
+    ".specignore": ["spec/assets/", "/spec/secret.txt"].join("\n"),
+    "spec/SPEC.md": "nested spec\n",
+    "spec/notes.md": "keep notes\n",
+    "spec/assets/diagram.txt": "skip asset\n",
+    "spec/secret.txt": "skip secret\n",
+  });
+
+  await syncSpecs(repoRoot, {
+    slugs: ["ignored-subdir"],
+    now: () => new Date("2026-03-11T11:12:13.000Z"),
+    log: () => {},
+    downloadUpstreamRepository: async () => ({
+      root: upstreamRoot,
+      resolvedCommit: "8888888888888888888888888888888888888888",
+      cleanup: async () => {},
+    }),
+  });
+
+  expect(await readFile(join(repoRoot, "specs/ignored-subdir/SPEC.md"), "utf8")).toBe("nested spec\n");
+  expect(await readFile(join(repoRoot, "specs/ignored-subdir/notes.md"), "utf8")).toBe("keep notes\n");
+  expect(access(join(repoRoot, "specs/ignored-subdir/assets/diagram.txt"), constants.F_OK)).rejects.toBeDefined();
+  expect(access(join(repoRoot, "specs/ignored-subdir/secret.txt"), constants.F_OK)).rejects.toBeDefined();
+
+  const upstreamMetadata = await readFile(join(repoRoot, "specs/ignored-subdir/UPSTREAM.md"), "utf8");
+  expect(upstreamMetadata).toContain("- Synced files: `SPEC.md`, `notes.md`.");
+  expect(upstreamMetadata).toContain("- Upstream `.specignore` patterns applied: `spec/assets/`, `/spec/secret.txt`.");
+});
+
+test("sync-specs fails when upstream .specignore excludes the required spec file", async () => {
+  const repoRoot = await createTempRepo();
+  await createSpec(repoRoot, "broken-spec-only", {
+    metadataSource: "https://github.com/example/broken-repo",
+    files: {
+      "SPEC.md": "old spec\n",
+    },
+  });
+
+  const upstreamRoot = await createUpstreamRoot({
+    ".specignore": "SPEC.md\n",
+    "SPEC.md": "fresh spec\n",
+  });
+
+  await expect(
+    syncSpecs(repoRoot, {
+      slugs: ["broken-spec-only"],
+      log: () => {},
+      downloadUpstreamRepository: async () => ({
+        root: upstreamRoot,
+        resolvedCommit: "7777777777777777777777777777777777777777",
+        cleanup: async () => {},
+      }),
+    }),
+  ).rejects.toThrow("required spec file is ignored by upstream .specignore: SPEC.md");
+});
