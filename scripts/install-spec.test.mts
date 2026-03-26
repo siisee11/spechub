@@ -1,4 +1,4 @@
-import { access, chmod, mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { access, chmod, mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -127,4 +127,87 @@ test("install-spec fails when the target spec folder lacks SPEC.md", async () =>
   expect(exitCode).toBe(1);
   expect(stdout).toBe("");
   expect(stderr).toContain("spec 'demo-spec' is missing SPEC.md");
+});
+
+test("install-spec prompts before overwriting an existing spec folder and replaces it on yes", async () => {
+  const archivePath = await createArchive({
+    "SPEC.md": "# Fresh Demo Spec\n",
+    "notes.md": "fresh companion file\n",
+  });
+  const fakeCurlBin = await createFakeCurlBin(archivePath);
+  const targetDir = await mkdtemp(join(tmpdir(), "spechub-install-target-"));
+  const existingSpecRoot = join(targetDir, "specs/demo-spec");
+
+  await mkdir(existingSpecRoot, { recursive: true });
+  await writeFile(join(existingSpecRoot, "SPEC.md"), "# Old Demo Spec\n");
+  await writeFile(join(existingSpecRoot, "notes.md"), "stale companion file\n");
+
+  const run = Bun.spawn({
+    cmd: ["sh", installScriptPath, "openai/spechub", "main", "demo-spec"],
+    cwd: targetDir,
+    stdin: "pipe",
+    env: {
+      ...process.env,
+      LANG: "C",
+      LC_ALL: "C",
+      PATH: `${fakeCurlBin}:${process.env.PATH ?? ""}`,
+      TEST_ARCHIVE_PATH: archivePath,
+    },
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+
+  run.stdin.write("yes\n");
+  run.stdin.end();
+
+  const exitCode = await run.exited;
+  const stdout = await new Response(run.stdout).text();
+  const stderr = await new Response(run.stderr).text();
+
+  expect(exitCode).toBe(0);
+  expect(stdout).toContain("installed demo-spec into ");
+  expect(stdout.trim()).toEndWith("/specs/demo-spec");
+  expect(stderr).toContain("destination './specs/demo-spec' already exists. Overwrite? [y/N]");
+  expect(await readFile(join(existingSpecRoot, "SPEC.md"), "utf8")).toBe("# Fresh Demo Spec\n");
+  expect(await readFile(join(existingSpecRoot, "notes.md"), "utf8")).toBe("fresh companion file\n");
+});
+
+test("install-spec leaves an existing spec folder unchanged when overwrite is declined", async () => {
+  const archivePath = await createArchive({
+    "SPEC.md": "# Fresh Demo Spec\n",
+  });
+  const fakeCurlBin = await createFakeCurlBin(archivePath);
+  const targetDir = await mkdtemp(join(tmpdir(), "spechub-install-target-"));
+  const existingSpecRoot = join(targetDir, "specs/demo-spec");
+
+  await mkdir(existingSpecRoot, { recursive: true });
+  await writeFile(join(existingSpecRoot, "SPEC.md"), "# Old Demo Spec\n");
+
+  const run = Bun.spawn({
+    cmd: ["sh", installScriptPath, "openai/spechub", "main", "demo-spec"],
+    cwd: targetDir,
+    stdin: "pipe",
+    env: {
+      ...process.env,
+      LANG: "C",
+      LC_ALL: "C",
+      PATH: `${fakeCurlBin}:${process.env.PATH ?? ""}`,
+      TEST_ARCHIVE_PATH: archivePath,
+    },
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+
+  run.stdin.write("no\n");
+  run.stdin.end();
+
+  const exitCode = await run.exited;
+  const stdout = await new Response(run.stdout).text();
+  const stderr = await new Response(run.stderr).text();
+
+  expect(exitCode).toBe(1);
+  expect(stdout).toBe("");
+  expect(stderr).toContain("destination './specs/demo-spec' already exists. Overwrite? [y/N]");
+  expect(stderr).toContain("skipped overwriting existing destination './specs/demo-spec'");
+  expect(await readFile(join(existingSpecRoot, "SPEC.md"), "utf8")).toBe("# Old Demo Spec\n");
 });
