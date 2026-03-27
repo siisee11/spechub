@@ -1,0 +1,20 @@
+{
+  "$schema": "https://spechub.dev/schema/spec-config.v1.json",
+  "schema_version": 1,
+  "spec": {
+    "key": "github:siisee11/harness.spec",
+    "slug": "harness-spec",
+    "title": "create-harness Spec",
+    "entry": "SPEC.md"
+  },
+  "dependencies": [
+    {
+      "key": "github:siisee11/ralph-loop.spec#spec",
+      "type": "requires",
+      "reason": "The harness blueprint assumes Ralph Loop is already installed as the repository coding loop."
+    }
+  ],
+  "install": {
+    "include_dependencies": "transitive"
+  }
+}

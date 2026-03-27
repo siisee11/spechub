@@ -5,12 +5,36 @@ export type RepoSource = {
   ref: string;
 };
 
+export type SpecDependencyType = 'requires';
+
+export type SpecDependencyDefinition = {
+  key: string;
+  type: SpecDependencyType;
+  reason: string;
+};
+
+export type SpecInstallMode = 'none' | 'direct' | 'transitive';
+
+export type SpecConfig = {
+  spec: {
+    key: string;
+    slug: string;
+    title: string;
+    entry: string;
+  };
+  dependencies: SpecDependencyDefinition[];
+  install: {
+    includeDependencies: SpecInstallMode;
+  };
+};
+
 export type SpecMarkdownFile = {
   path: string;
   content: string;
   readmeContent?: string | null;
   readmeAssetBaseUrl?: string | null;
   metadata?: SpecMetadata | null;
+  config?: SpecConfig | null;
 };
 
 export type SpecMetadata = {
@@ -18,13 +42,23 @@ export type SpecMetadata = {
   syncedDate: string;
 };
 
+export type SpecCatalogDependency = {
+  key: string;
+  type: SpecDependencyType;
+  reason: string;
+  slug: string | null;
+  name: string | null;
+};
+
 export type SpecCatalogEntry = {
   slug: string;
+  specKey: string | null;
   name: string;
   description: string;
   specPath: string;
   downloadCommand: string;
   implementPrompt: string;
+  dependencies: SpecCatalogDependency[];
   readmeContent?: string | null;
   readmeAssetBaseUrl?: string | null;
   metadata?: SpecMetadata | null;
@@ -87,14 +121,14 @@ export function buildInstallCommand(slug: string, repoSource?: RepoSource): stri
 }
 
 export function buildImplementPrompt(slug: string, repoSource?: RepoSource): string {
-  return `Download SPEC files by executing \`${buildInstallCommand(slug, repoSource)}\` command and start implement that spec.`;
+  return `Download SPEC files and declared dependencies by executing \`${buildInstallCommand(slug, repoSource)}\` command and start implement that spec.`;
 }
 
 export function buildSpecCatalog(
   specFiles: SpecMarkdownFile[],
   repoSource?: RepoSource,
 ): SpecCatalogEntry[] {
-  return specFiles
+  const catalog = specFiles
     .map<SpecCatalogEntry | null>((file) => {
       const slug = extractSpecSlugFromPath(file.path);
       if (!slug) {
@@ -105,11 +139,13 @@ export function buildSpecCatalog(
 
       return {
         slug,
+        specKey: file.config?.spec.key ?? null,
         name: parsed.name,
         description: parsed.description,
         specPath: `specs/${slug}`,
         downloadCommand: buildInstallCommand(slug, repoSource),
         implementPrompt: buildImplementPrompt(slug, repoSource),
+        dependencies: [],
         readmeContent: file.readmeContent ?? null,
         readmeAssetBaseUrl: file.readmeAssetBaseUrl ?? null,
         metadata: file.metadata ?? null,
@@ -117,4 +153,38 @@ export function buildSpecCatalog(
     })
     .filter((entry): entry is SpecCatalogEntry => entry !== null)
     .sort((a, b) => a.slug.localeCompare(b.slug));
+
+  const entryBySpecKey = new Map(
+    catalog
+      .filter((entry) => entry.specKey !== null)
+      .map((entry) => [entry.specKey!, entry] as const),
+  );
+  const configBySlug = new Map(
+    specFiles
+      .map((file) => {
+        const slug = extractSpecSlugFromPath(file.path);
+        return slug ? ([slug, file.config ?? null] as const) : null;
+      })
+      .filter((entry): entry is readonly [string, SpecConfig | null] => entry !== null),
+  );
+
+  return catalog.map((entry) => {
+    const config = configBySlug.get(entry.slug);
+    const dependencies =
+      config?.dependencies.map((dependency) => {
+        const targetEntry = entryBySpecKey.get(dependency.key);
+        return {
+          key: dependency.key,
+          type: dependency.type,
+          reason: dependency.reason,
+          slug: targetEntry?.slug ?? null,
+          name: targetEntry?.name ?? null,
+        } satisfies SpecCatalogDependency;
+      }) ?? [];
+
+    return {
+      ...entry,
+      dependencies,
+    } satisfies SpecCatalogEntry;
+  });
 }

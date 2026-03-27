@@ -6,13 +6,23 @@ import type { SpecCatalogEntry } from './lib/spec-catalog';
 const SAMPLE_SPECS: SpecCatalogEntry[] = [
   {
     slug: 'harness-spec',
+    specKey: 'github:siisee11/harness.spec',
     name: 'Harness Spec',
     description: 'Build a portable harness engineering system.',
     specPath: 'specs/harness-spec',
     downloadCommand:
       'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "harness-spec"',
     implementPrompt:
-      'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "harness-spec"` command and start implement that spec.',
+      'Download SPEC files and declared dependencies by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "harness-spec"` command and start implement that spec.',
+    dependencies: [
+      {
+        key: 'github:siisee11/ralph-loop.spec#spec',
+        type: 'requires',
+        reason: 'Harness assumes Ralph Loop is available.',
+        slug: 'docs-blueprint',
+        name: 'Docs Blueprint',
+      },
+    ],
     metadata: {
       source: 'https://github.com/siisee11/harness.spec',
       syncedDate: '2026-03-10T12:34:10Z',
@@ -22,13 +32,15 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
   },
   {
     slug: 'docs-blueprint',
+    specKey: null,
     name: 'Docs Blueprint',
     description: 'Generate canonical docs structure.',
     specPath: 'specs/docs-blueprint',
     downloadCommand:
       'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"',
     implementPrompt:
-      'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"` command and start implement that spec.',
+      'Download SPEC files and declared dependencies by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"` command and start implement that spec.',
+    dependencies: [],
     metadata: null,
     readmeContent: null,
     readmeAssetBaseUrl: null,
@@ -73,7 +85,7 @@ describe('App', () => {
       screen.getByText(
         (_, element) =>
           element?.textContent ===
-          'Each implement prompt tells the agent how to download the full spec folder, including files next to SPEC.md.',
+          'Each implement prompt tells the agent how to download the full spec folder, companion files, and declared dependencies next to SPEC.md.',
       ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('Catalog coverage')).toBeInTheDocument();
@@ -91,6 +103,9 @@ describe('App', () => {
     expect(screen.getByText('Synced UTC')).toBeInTheDocument();
     expect(screen.getByText('Source')).toBeInTheDocument();
     expect(screen.getByText('Synced date (UTC)')).toBeInTheDocument();
+    expect(screen.getByText('Dependencies')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Docs Blueprint' })).toBeInTheDocument();
+    expect(screen.getByText('Harness assumes Ralph Loop is available.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).toBeInTheDocument();
     expect(screen.getByText('2026-03-10T12:34:10Z')).toBeInTheDocument();
     expect(screen.getByText('README')).toBeInTheDocument();
@@ -112,11 +127,12 @@ describe('App', () => {
     expect(screen.queryByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).not.toBeInTheDocument();
     expect(screen.queryByText('Portable agent loop.')).not.toBeInTheDocument();
     expect(screen.getAllByText('Unknown')).toHaveLength(2);
+    expect(screen.getByText('None')).toBeInTheDocument();
     expect(screen.queryByLabelText('README for docs-blueprint')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('Copy implement prompt for docs-blueprint'));
     expect(copyMock).toHaveBeenCalledWith(
-      'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"` command and start implement that spec.',
+      'Download SPEC files and declared dependencies by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"` command and start implement that spec.',
     );
     fireEvent.click(screen.getByLabelText('Copy download command for docs-blueprint'));
     expect(copyMock).toHaveBeenCalledWith(
@@ -134,6 +150,63 @@ describe('App', () => {
       expect(within(selectedDetails).getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Select docs-blueprint' })).toHaveAttribute('aria-pressed', 'true');
     });
+  });
+
+  it('lets users jump to a dependency from the selected spec panel', () => {
+    render(<App specs={SAMPLE_SPECS} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Docs Blueprint' }));
+
+    const selectedDetails = screen.getByLabelText('Selected spec details');
+    expect(within(selectedDetails).getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#docs-blueprint');
+  });
+
+  it('falls back to dependency slug when the dependency name is unavailable', () => {
+    render(
+      <App
+        specs={[
+          {
+            ...SAMPLE_SPECS[0],
+            dependencies: [
+              {
+                key: 'github:siisee11/ralph-loop.spec#spec',
+                type: 'requires',
+                reason: 'Fallback label.',
+                slug: 'docs-blueprint',
+                name: null,
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'docs-blueprint' })).toBeInTheDocument();
+  });
+
+  it('renders unresolved dependency keys when the catalog target is unavailable', () => {
+    render(
+      <App
+        specs={[
+          {
+            ...SAMPLE_SPECS[0],
+            dependencies: [
+              {
+                key: 'github:missing/spec',
+                type: 'requires',
+                reason: 'External prerequisite.',
+                slug: null,
+                name: null,
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText('github:missing/spec')).toBeInTheDocument();
+    expect(screen.getByText('External prerequisite.')).toBeInTheDocument();
   });
 
   it('does not rewrite the hash when the selected spec is clicked again', () => {

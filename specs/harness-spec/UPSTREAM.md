@@ -6,13 +6,13 @@ This directory vendors third-party specification content from `siisee11/harness.
 
 - Repository: `https://github.com/siisee11/harness.spec`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-27): `5e0c4d1802c7388b19b81590872a9c6dbf2a9f01`
+- Resolved commit at fetch time (2026-03-27): `e6e959128a01a884a971ca62ccf0b667e61d9794`
 - License in upstream repo: no top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs
 
-- Repository root: `https://github.com/siisee11/harness.spec/tree/5e0c4d1802c7388b19b81590872a9c6dbf2a9f01`
-- Main spec: `https://github.com/siisee11/harness.spec/blob/5e0c4d1802c7388b19b81590872a9c6dbf2a9f01/SPEC.md`
+- Repository root: `https://github.com/siisee11/harness.spec/tree/e6e959128a01a884a971ca62ccf0b667e61d9794`
+- Main spec: `https://github.com/siisee11/harness.spec/blob/e6e959128a01a884a971ca62ccf0b667e61d9794/SPEC.md`
 
 ## Import method
 
@@ -32,10 +32,11 @@ This directory vendors third-party specification content from `siisee11/harness.
 - `SPEC.md`: `e49de348f98131d50d1b20ca55eec65ccbe864e5f391ea3a728898618e1c44cd`
 - `harness-scaffolding-checklist.md`: `85651c6c3673bce587297833c851bf0ec8b44db90ac8474c8fa646c9aa86d1f6`
 - `references/codex-app-server-llm.txt`: `060db76ac1bd3a412c8dc3231afd37fceff8b58ac776c47323670be7fdddbb79`
+- `spec.config.json`: `28cf96ad06fcb1bac031f8b871ff0d1d1384489cf0f291f3b0c6b4ba39c8d26f`
 - `templates/NON_NEGOTIABLE_RULES.md`: `f6bd0b202346c7c6029871746f9bbc480d15b02a160c133a6bb5432099e59589`
 
 ## Modification status
 
-- All files except `metadata.json` and `UPSTREAM.md` are unmodified copies of upstream tracked files at commit `5e0c4d1802c7388b19b81590872a9c6dbf2a9f01`.
+- All files except `metadata.json` and `UPSTREAM.md` are unmodified copies of upstream tracked files at commit `e6e959128a01a884a971ca62ccf0b667e61d9794`.
 - `metadata.json` is repository-local discovery metadata.
 - `UPSTREAM.md` is repository-local provenance metadata.

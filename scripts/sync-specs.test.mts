@@ -216,6 +216,23 @@ test("sync-specs refreshes selected upstream-managed files for non-.spec reposit
     "SPEC.md": "fresh upstream spec\n",
     "LICENSE": "fresh upstream license\n",
     "NOTICE": "fresh upstream notice\n",
+    "spec.config.json": JSON.stringify(
+      {
+        schema_version: 1,
+        spec: {
+          key: "github:openai/symphony",
+          slug: "symphony",
+          title: "Symphony",
+          entry: "SPEC.md",
+        },
+        dependencies: [],
+        install: {
+          include_dependencies: "transitive",
+        },
+      },
+      null,
+      2,
+    ),
   });
 
   const downloads: Array<{ ownerRepo: string; ref: string }> = [];
@@ -244,6 +261,19 @@ test("sync-specs refreshes selected upstream-managed files for non-.spec reposit
   expect(await readFile(join(repoRoot, "specs/symphony/SPEC.md"), "utf8")).toBe("fresh upstream spec\n");
   expect(await readFile(join(repoRoot, "specs/symphony/LICENSE"), "utf8")).toBe("fresh upstream license\n");
   expect(await readFile(join(repoRoot, "specs/symphony/NOTICE"), "utf8")).toBe("fresh upstream notice\n");
+  expect(JSON.parse(await readFile(join(repoRoot, "specs/symphony/spec.config.json"), "utf8"))).toEqual({
+    schema_version: 1,
+    spec: {
+      key: "github:openai/symphony",
+      slug: "symphony",
+      title: "Symphony",
+      entry: "SPEC.md",
+    },
+    dependencies: [],
+    install: {
+      include_dependencies: "transitive",
+    },
+  });
   expect(JSON.parse(await readFile(join(repoRoot, "specs/symphony/metadata.json"), "utf8"))).toEqual({
     source: "https://github.com/openai/symphony",
     synced_date: "2026-03-11T05:06:07.000Z",
@@ -258,7 +288,8 @@ test("sync-specs refreshes selected upstream-managed files for non-.spec reposit
   expect(upstreamMetadata).toContain("- `SPEC.md`: `https://github.com/openai/symphony/blob/abcdef1234567890abcdef1234567890abcdef12/SPEC.md`");
   expect(upstreamMetadata).toContain("- `LICENSE`: `https://github.com/openai/symphony/blob/abcdef1234567890abcdef1234567890abcdef12/LICENSE`");
   expect(upstreamMetadata).toContain("- `NOTICE`: `https://github.com/openai/symphony/blob/abcdef1234567890abcdef1234567890abcdef12/NOTICE`");
-  expect(upstreamMetadata).toContain("- Synced files: `SPEC.md`, `LICENSE`, `NOTICE`.");
+  expect(upstreamMetadata).toContain("- `spec.config.json`: `https://github.com/openai/symphony/blob/abcdef1234567890abcdef1234567890abcdef12/spec.config.json`");
+  expect(upstreamMetadata).toContain("- Synced files: `SPEC.md`, `LICENSE`, `NOTICE`, `spec.config.json`.");
   expect(upstreamMetadata).toContain("- `UPSTREAM.md` is repository-local provenance metadata.");
 });
 

@@ -6,13 +6,13 @@ This directory vendors third-party specification content from `siisee11/what-the
 
 - Repository: `https://github.com/siisee11/what-the-loop.spec`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-27): `fc746a3942d253facd3b8b95736a2627f55d671c`
+- Resolved commit at fetch time (2026-03-27): `ddc9e17df67adbd90a38953d7fdb57f8547a021e`
 - License in upstream repo: no top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs
 
-- Repository root: `https://github.com/siisee11/what-the-loop.spec/tree/fc746a3942d253facd3b8b95736a2627f55d671c`
-- Main spec: `https://github.com/siisee11/what-the-loop.spec/blob/fc746a3942d253facd3b8b95736a2627f55d671c/SPEC.md`
+- Repository root: `https://github.com/siisee11/what-the-loop.spec/tree/ddc9e17df67adbd90a38953d7fdb57f8547a021e`
+- Main spec: `https://github.com/siisee11/what-the-loop.spec/blob/ddc9e17df67adbd90a38953d7fdb57f8547a021e/SPEC.md`
 
 ## Import method
 
@@ -30,6 +30,7 @@ This directory vendors third-party specification content from `siisee11/what-the
 - `references/claude-agent-sdk-llm.txt`: `5cb5a5b2fb81628e6b6167c6440626632277afa69cb38c8bace422f78eeeda71`
 - `references/codex-app-server-llm.txt`: `060db76ac1bd3a412c8dc3231afd37fceff8b58ac776c47323670be7fdddbb79`
 - `skills-lock.json`: `1f3f7be4c8be304ed2ecb5e72d94243f15c41992fe77331fe4a67e6a6834f6d3`
+- `spec.config.json`: `c020fcc35fcaba0e1ab64d13f6e4d1277f285e5203e8668524a2a66f7d71a8ae`
 - `wtl_engine.qnt`: `62c6f5a3f27318f17555bf55e52fab86c0db32884a022c019c9c72c050d78087`
 - `wtl_observer.qnt`: `12f0a22df984ca2287ec3cc293787323dad86880148a24178fadc7dbd6c6f3fe`
 - `wtl_policy_autoresearch.qnt`: `6fc9d3711dd1231e65777e78f16c2e805d4280d714e5a8067511a096b01c255e`
@@ -39,7 +40,7 @@ This directory vendors third-party specification content from `siisee11/what-the
 
 ## Modification status
 
-- All files except `metadata.json` and `UPSTREAM.md` are unmodified copies of upstream tracked files at commit `fc746a3942d253facd3b8b95736a2627f55d671c`.
+- All files except `metadata.json` and `UPSTREAM.md` are unmodified copies of upstream tracked files at commit `ddc9e17df67adbd90a38953d7fdb57f8547a021e`.
 - Files matched by upstream `.specignore` were intentionally not imported.
 - `metadata.json` is repository-local discovery metadata.
 - `UPSTREAM.md` is repository-local provenance metadata.

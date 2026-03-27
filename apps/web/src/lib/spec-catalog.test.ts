@@ -85,7 +85,7 @@ describe('buildImplementPrompt', () => {
     });
 
     expect(prompt).toBe(
-      'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/siisee11/spechub/main/scripts/install-spec.sh" | sh -s -- "siisee11/spechub" "main" "harness-spec"` command and start implement that spec.',
+      'Download SPEC files and declared dependencies by executing `curl -fsSL "https://raw.githubusercontent.com/siisee11/spechub/main/scripts/install-spec.sh" | sh -s -- "siisee11/spechub" "main" "harness-spec"` command and start implement that spec.',
     );
   });
 });
@@ -105,12 +105,42 @@ describe('buildSpecCatalog', () => {
           content: '# Zeta\n\nZeta description.',
           readmeContent: '# Zeta Readme\n\nReadme body.\n',
           readmeAssetBaseUrl: 'https://raw.githubusercontent.com/example/zeta/abc123/',
+          config: {
+            spec: {
+              key: 'github:example/zeta',
+              slug: 'zeta',
+              title: 'Zeta',
+              entry: 'SPEC.md',
+            },
+            dependencies: [],
+            install: {
+              includeDependencies: 'transitive',
+            },
+          },
           metadata: null,
         },
         {
           path: 'specs/alpha/SPEC.md',
           content: '',
           readmeAssetBaseUrl: null,
+          config: {
+            spec: {
+              key: 'github:example/alpha',
+              slug: 'alpha',
+              title: 'Alpha',
+              entry: 'SPEC.md',
+            },
+            dependencies: [
+              {
+                key: 'github:example/zeta',
+                type: 'requires',
+                reason: 'Alpha depends on Zeta.',
+              },
+            ],
+            install: {
+              includeDependencies: 'transitive',
+            },
+          },
           metadata: {
             source: 'https://example.com/alpha',
             syncedDate: '2026-03-10T12:34:10Z',
@@ -126,13 +156,23 @@ describe('buildSpecCatalog', () => {
     expect(catalog).toEqual([
       {
         slug: 'alpha',
+        specKey: 'github:example/alpha',
         name: 'alpha',
         description: DEFAULT_SPEC_DESCRIPTION,
         specPath: 'specs/alpha',
         downloadCommand:
           'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "alpha"',
         implementPrompt:
-          'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "alpha"` command and start implement that spec.',
+          'Download SPEC files and declared dependencies by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "alpha"` command and start implement that spec.',
+        dependencies: [
+          {
+            key: 'github:example/zeta',
+            type: 'requires',
+            reason: 'Alpha depends on Zeta.',
+            slug: 'zeta',
+            name: 'Zeta',
+          },
+        ],
         readmeContent: null,
         readmeAssetBaseUrl: null,
         metadata: {
@@ -142,13 +182,15 @@ describe('buildSpecCatalog', () => {
       },
       {
         slug: 'zeta',
+        specKey: 'github:example/zeta',
         name: 'Zeta',
         description: 'Zeta description.',
         specPath: 'specs/zeta',
         downloadCommand:
           'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "zeta"',
         implementPrompt:
-          'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "zeta"` command and start implement that spec.',
+          'Download SPEC files and declared dependencies by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "zeta"` command and start implement that spec.',
+        dependencies: [],
         readmeContent: '# Zeta Readme\n\nReadme body.\n',
         readmeAssetBaseUrl: 'https://raw.githubusercontent.com/example/zeta/abc123/',
         metadata: null,
@@ -173,16 +215,55 @@ describe('buildSpecCatalog', () => {
     expect(catalog).toEqual([
       {
         slug: 'no-metadata',
+        specKey: null,
         name: 'No Metadata',
         description: 'Demo spec.',
         specPath: 'specs/no-metadata',
         downloadCommand:
           'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "no-metadata"',
         implementPrompt:
-          'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "no-metadata"` command and start implement that spec.',
+          'Download SPEC files and declared dependencies by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "no-metadata"` command and start implement that spec.',
+        dependencies: [],
         readmeContent: null,
         readmeAssetBaseUrl: null,
         metadata: null,
+      },
+    ]);
+  });
+
+  it('keeps dependency targets unresolved when their spec key is not present in the catalog', () => {
+    const catalog = buildSpecCatalog([
+      {
+        path: 'specs/solo/SPEC.md',
+        content: '# Solo\n\nStandalone spec.',
+        config: {
+          spec: {
+            key: 'github:example/solo',
+            slug: 'solo',
+            title: 'Solo',
+            entry: 'SPEC.md',
+          },
+          dependencies: [
+            {
+              key: 'github:example/missing',
+              type: 'requires',
+              reason: 'Missing target.',
+            },
+          ],
+          install: {
+            includeDependencies: 'transitive',
+          },
+        },
+      },
+    ]);
+
+    expect(catalog[0]?.dependencies).toEqual([
+      {
+        key: 'github:example/missing',
+        type: 'requires',
+        reason: 'Missing target.',
+        slug: null,
+        name: null,
       },
     ]);
   });

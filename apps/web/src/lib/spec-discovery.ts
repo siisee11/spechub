@@ -4,7 +4,9 @@ import {
   buildSpecCatalog,
   parseGitHubOwnerRepo,
   type RepoSource,
+  type SpecConfig,
   type SpecCatalogEntry,
+  type SpecDependencyDefinition,
   type SpecMarkdownFile,
   type SpecMetadata,
 } from './spec-catalog';
@@ -39,12 +41,113 @@ function parseSpecMetadata(rawMetadata: string): SpecMetadata | null {
   }
 }
 
+function parseSpecConfig(rawConfig: string): SpecConfig | null {
+  try {
+    const parsed = JSON.parse(rawConfig) as {
+      schema_version?: unknown;
+      spec?: {
+        key?: unknown;
+        slug?: unknown;
+        title?: unknown;
+        entry?: unknown;
+      };
+      dependencies?: unknown;
+      install?: {
+        include_dependencies?: unknown;
+      };
+    };
+
+    const spec = parsed.spec;
+    if (
+      parsed.schema_version !== 1 ||
+      typeof spec?.key !== 'string' ||
+      typeof spec.slug !== 'string' ||
+      typeof spec.title !== 'string' ||
+      typeof spec.entry !== 'string'
+    ) {
+      return null;
+    }
+
+    const key = spec.key.trim();
+    const slug = spec.slug.trim();
+    const title = spec.title.trim();
+    const entry = spec.entry.trim();
+    if (!key || !slug || !title || !entry) {
+      return null;
+    }
+
+    const includeDependencies = parsed.install?.include_dependencies;
+    const installMode =
+      includeDependencies === 'none' || includeDependencies === 'direct' || includeDependencies === 'transitive'
+        ? includeDependencies
+        : 'transitive';
+
+    const dependencies = Array.isArray(parsed.dependencies)
+      ? parsed.dependencies
+          .map<SpecDependencyDefinition | null>((dependency) => {
+            const typedDependency = dependency as {
+              key?: unknown;
+              type?: unknown;
+              reason?: unknown;
+            };
+
+            if (
+              typeof typedDependency.key !== 'string' ||
+              typedDependency.type !== 'requires' ||
+              typeof typedDependency.reason !== 'string'
+            ) {
+              return null;
+            }
+
+            const dependencyKey = typedDependency.key.trim();
+            const reason = typedDependency.reason.trim();
+            if (!dependencyKey || !reason) {
+              return null;
+            }
+
+            return {
+              key: dependencyKey,
+              type: 'requires',
+              reason,
+            };
+          })
+          .filter((dependency): dependency is SpecDependencyDefinition => dependency !== null)
+      : [];
+
+    return {
+      spec: {
+        key,
+        slug,
+        title,
+        entry,
+      },
+      dependencies,
+      install: {
+        includeDependencies: installMode,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function loadSpecMetadata(specRoot: string): Promise<SpecMetadata | null> {
   const metadataPath = path.join(specRoot, 'metadata.json');
 
   try {
     const metadataContent = await readFile(metadataPath, 'utf8');
     return parseSpecMetadata(metadataContent);
+  } catch {
+    return null;
+  }
+}
+
+async function loadSpecConfig(specRoot: string): Promise<SpecConfig | null> {
+  const configPath = path.join(specRoot, 'spec.config.json');
+
+  try {
+    const configContent = await readFile(configPath, 'utf8');
+    return parseSpecConfig(configContent);
   } catch {
     return null;
   }
@@ -100,10 +203,11 @@ export async function loadSpecMarkdownFilesFromRepository(repoRoot: string): Pro
         const specPath = path.join(specRoot, 'SPEC.md');
 
         try {
-          const [content, readmeContent, metadata] = await Promise.all([
+          const [content, readmeContent, metadata, config] = await Promise.all([
             readFile(specPath, 'utf8'),
             loadOptionalMarkdown(specRoot, 'README.md'),
             loadSpecMetadata(specRoot),
+            loadSpecConfig(specRoot),
           ]);
           const readmeAssetBaseUrl = await loadReadmeAssetBaseUrl(specRoot, metadata);
           return {
@@ -112,6 +216,7 @@ export async function loadSpecMarkdownFilesFromRepository(repoRoot: string): Pro
             readmeContent,
             readmeAssetBaseUrl,
             metadata,
+            config,
           } satisfies SpecMarkdownFile;
         } catch {
           return null;

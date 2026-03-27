@@ -53,6 +53,10 @@ export default function App({
   const selectedSpec = specs.find((spec) => spec.slug === activeSlug) ?? null;
   const syncedSpecCount = specs.filter((spec) => spec.metadata?.syncedDate).length;
   const readmeCount = specs.filter((spec) => spec.readmeContent).length;
+  const selectSpec = (slug: string): void => {
+    setSelectedSlug(slug);
+    writeSelectedSlugToHash(slug);
+  };
 
   useEffect(() => {
     const syncSelectedSlugFromHash = (): void => {
@@ -77,8 +81,8 @@ export default function App({
             agent.
           </p>
           <p className="hero-copy">
-            Each implement prompt tells the agent how to download the full spec folder, including files next to{' '}
-            <code>SPEC.md</code>.
+            Each implement prompt tells the agent how to download the full spec folder, companion files, and declared
+            dependencies next to <code>SPEC.md</code>.
           </p>
         </header>
 
@@ -159,6 +163,35 @@ export default function App({
                       <code>{activeSpec.metadata?.syncedDate ?? 'Unknown'}</code>
                     </dd>
                   </div>
+                  <div>
+                    <dt>Dependencies</dt>
+                    <dd>
+                      {activeSpec.dependencies.length > 0 ? (
+                        <ul className="dependency-list">
+                          {activeSpec.dependencies.map((dependency) => (
+                            <li key={dependency.key}>
+                              {dependency.slug ? (
+                                <button
+                                  className="dependency-link"
+                                  type="button"
+                                  onClick={() => {
+                                    selectSpec(dependency.slug!);
+                                  }}
+                                >
+                                  {dependency.name ?? dependency.slug}
+                                </button>
+                              ) : (
+                                <code>{dependency.key}</code>
+                              )}
+                              <span className="dependency-reason">{dependency.reason}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span>None</span>
+                      )}
+                    </dd>
+                  </div>
                 </dl>
 
                 <div className="command-grid">
@@ -166,7 +199,7 @@ export default function App({
                     <div className="command-card-header">
                       <div>
                         <p className="section-label">Install command</p>
-                        <p className="command-caption">Shell installer for the full spec folder.</p>
+                        <p className="command-caption">Shell installer for the full spec folder and its dependency graph.</p>
                       </div>
                       <button
                         type="button"
@@ -225,8 +258,7 @@ export default function App({
                         className="spec-select"
                         type="button"
                         onClick={() => {
-                          setSelectedSlug(spec.slug);
-                          writeSelectedSlugToHash(spec.slug);
+                          selectSpec(spec.slug);
                         }}
                         aria-label={`Select ${spec.slug}`}
                         aria-pressed={isSelected}

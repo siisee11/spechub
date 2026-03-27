@@ -47,6 +47,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
         readmeContent: '# Readme\n\nExtra details.\n',
         readmeAssetBaseUrl: null,
         metadata: null,
+        config: null,
       },
     ]);
   });
@@ -71,6 +72,27 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
       ),
       'utf8',
     );
+    await writeFile(
+      path.join(repoRoot, 'specs', 'symphony', 'spec.config.json'),
+      JSON.stringify(
+        {
+          schema_version: 1,
+          spec: {
+            key: 'github:openai/symphony',
+            slug: 'symphony',
+            title: 'Symphony',
+            entry: 'SPEC.md',
+          },
+          dependencies: [],
+          install: {
+            include_dependencies: 'transitive',
+          },
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
 
     await writeFile(path.join(repoRoot, 'specs', 'broken-spec', 'SPEC.md'), '# Broken\n\nBad metadata.\n', 'utf8');
     await writeFile(path.join(repoRoot, 'specs', 'broken-spec', 'metadata.json'), '{"source": 42}', 'utf8');
@@ -86,6 +108,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
         readmeContent: null,
         readmeAssetBaseUrl: null,
         metadata: null,
+        config: null,
       },
       {
         path: 'specs/invalid-json/SPEC.md',
@@ -93,6 +116,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
         readmeContent: null,
         readmeAssetBaseUrl: null,
         metadata: null,
+        config: null,
       },
       {
         path: 'specs/symphony/SPEC.md',
@@ -102,6 +126,18 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
         metadata: {
           source: 'https://github.com/openai/symphony',
           syncedDate: '2026-03-10T12:34:10Z',
+        },
+        config: {
+          spec: {
+            key: 'github:openai/symphony',
+            slug: 'symphony',
+            title: 'Symphony',
+            entry: 'SPEC.md',
+          },
+          dependencies: [],
+          install: {
+            includeDependencies: 'transitive',
+          },
         },
       },
     ]);
@@ -150,6 +186,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
         readmeContent: null,
         readmeAssetBaseUrl: null,
         metadata: null,
+        config: null,
       },
       {
         path: 'specs/trimmed-spec/SPEC.md',
@@ -160,6 +197,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
           source: 'https://github.com/openai/symphony',
           syncedDate: '2026-03-10T12:34:10Z',
         },
+        config: null,
       },
     ]);
   });
@@ -211,6 +249,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
           source: 'https://github.com/siisee11/what-the-loop.spec',
           syncedDate: '2026-03-10T12:34:10Z',
         },
+        config: null,
       },
     ]);
   });
@@ -330,6 +369,172 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
 
     expect(files.map((file) => file.readmeAssetBaseUrl)).toEqual([null, null]);
   });
+
+  it('ignores invalid spec.config.json payloads and filters invalid dependency entries', async () => {
+    const repoRoot = await createTempRepo();
+
+    await mkdir(path.join(repoRoot, 'specs', 'bad-json'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'specs', 'bad-shape'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'specs', 'bad-dependency'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'specs', 'non-array-dependencies'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'specs', 'empty-fields'), { recursive: true });
+
+    await writeFile(path.join(repoRoot, 'specs', 'bad-json', 'SPEC.md'), '# Bad Json\n\nBody.\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'specs', 'bad-shape', 'SPEC.md'), '# Bad Shape\n\nBody.\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'specs', 'bad-dependency', 'SPEC.md'), '# Bad Dependency\n\nBody.\n', 'utf8');
+    await writeFile(
+      path.join(repoRoot, 'specs', 'non-array-dependencies', 'SPEC.md'),
+      '# Non Array Dependencies\n\nBody.\n',
+      'utf8',
+    );
+    await writeFile(path.join(repoRoot, 'specs', 'empty-fields', 'SPEC.md'), '# Empty Fields\n\nBody.\n', 'utf8');
+
+    await writeFile(path.join(repoRoot, 'specs', 'bad-json', 'spec.config.json'), '{', 'utf8');
+    await writeFile(
+      path.join(repoRoot, 'specs', 'bad-shape', 'spec.config.json'),
+      JSON.stringify(
+        {
+          schema_version: 2,
+          spec: {
+            key: 'github:example/bad-shape',
+            slug: 'bad-shape',
+            title: 'Bad Shape',
+            entry: 'SPEC.md',
+          },
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    await writeFile(
+      path.join(repoRoot, 'specs', 'bad-dependency', 'spec.config.json'),
+      JSON.stringify(
+        {
+          schema_version: 1,
+          spec: {
+            key: 'github:example/bad-dependency',
+            slug: 'bad-dependency',
+            title: 'Bad Dependency',
+            entry: 'SPEC.md',
+          },
+          dependencies: [
+            {
+              key: 'github:example/valid',
+              type: 'requires',
+              reason: 'Keep this one.',
+            },
+            {
+              key: 'github:example/invalid-type',
+              type: 'optional',
+              reason: 'Drop this one too.',
+            },
+            {
+              key: '   ',
+              type: 'requires',
+              reason: 'Drop this one.',
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    await writeFile(
+      path.join(repoRoot, 'specs', 'non-array-dependencies', 'spec.config.json'),
+      JSON.stringify(
+        {
+          schema_version: 1,
+          spec: {
+            key: 'github:example/non-array-dependencies',
+            slug: 'non-array-dependencies',
+            title: 'Non Array Dependencies',
+            entry: 'SPEC.md',
+          },
+          dependencies: {
+            unexpected: true,
+          },
+          install: {
+            include_dependencies: 'direct',
+          },
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    await writeFile(
+      path.join(repoRoot, 'specs', 'empty-fields', 'spec.config.json'),
+      JSON.stringify(
+        {
+          schema_version: 1,
+          spec: {
+            key: '   ',
+            slug: 'empty-fields',
+            title: 'Empty Fields',
+            entry: 'SPEC.md',
+          },
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+
+    const files = (await loadSpecMarkdownFilesFromRepository(repoRoot)).sort((a, b) => a.path.localeCompare(b.path));
+
+    expect(files.map((file) => ({ path: file.path, config: file.config }))).toEqual([
+      {
+        path: 'specs/bad-dependency/SPEC.md',
+        config: {
+          spec: {
+            key: 'github:example/bad-dependency',
+            slug: 'bad-dependency',
+            title: 'Bad Dependency',
+            entry: 'SPEC.md',
+          },
+          dependencies: [
+            {
+              key: 'github:example/valid',
+              type: 'requires',
+              reason: 'Keep this one.',
+            },
+          ],
+          install: {
+            includeDependencies: 'transitive',
+          },
+        },
+      },
+      {
+        path: 'specs/bad-json/SPEC.md',
+        config: null,
+      },
+      {
+        path: 'specs/bad-shape/SPEC.md',
+        config: null,
+      },
+      {
+        path: 'specs/empty-fields/SPEC.md',
+        config: null,
+      },
+      {
+        path: 'specs/non-array-dependencies/SPEC.md',
+        config: {
+          spec: {
+            key: 'github:example/non-array-dependencies',
+            slug: 'non-array-dependencies',
+            title: 'Non Array Dependencies',
+            entry: 'SPEC.md',
+          },
+          dependencies: [],
+          install: {
+            includeDependencies: 'direct',
+          },
+        },
+      },
+    ]);
+  });
 });
 
 describe('loadSpecCatalogFromRepository', () => {
@@ -362,6 +567,54 @@ describe('loadSpecCatalogFromRepository', () => {
       ].join('\n'),
       'utf8',
     );
+    await writeFile(
+      path.join(repoRoot, 'specs', 'a-spec', 'spec.config.json'),
+      JSON.stringify(
+        {
+          schema_version: 1,
+          spec: {
+            key: 'github:example/a-spec',
+            slug: 'a-spec',
+            title: 'A Spec',
+            entry: 'SPEC.md',
+          },
+          dependencies: [
+            {
+              key: 'github:example/z-spec',
+              type: 'requires',
+              reason: 'A builds on top of Z.',
+            },
+          ],
+          install: {
+            include_dependencies: 'transitive',
+          },
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    await writeFile(
+      path.join(repoRoot, 'specs', 'z-spec', 'spec.config.json'),
+      JSON.stringify(
+        {
+          schema_version: 1,
+          spec: {
+            key: 'github:example/z-spec',
+            slug: 'z-spec',
+            title: 'Z Spec',
+            entry: 'SPEC.md',
+          },
+          dependencies: [],
+          install: {
+            include_dependencies: 'transitive',
+          },
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
 
     const catalog = await loadSpecCatalogFromRepository(repoRoot, {
       ownerRepo: 'openai/spechub',
@@ -370,7 +623,7 @@ describe('loadSpecCatalogFromRepository', () => {
 
     expect(catalog.map((entry) => entry.slug)).toEqual(['a-spec', 'z-spec']);
     expect(catalog[0]?.implementPrompt).toBe(
-      'Download SPEC files by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "a-spec"` command and start implement that spec.',
+      'Download SPEC files and declared dependencies by executing `curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "a-spec"` command and start implement that spec.',
     );
     expect(catalog[0]?.downloadCommand).toBe(
       'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "a-spec"',
@@ -383,6 +636,18 @@ describe('loadSpecCatalogFromRepository', () => {
       source: 'https://github.com/example/a-spec',
       syncedDate: '2026-03-10T12:34:10Z',
     });
+    expect(catalog[0]?.specKey).toBe('github:example/a-spec');
+    expect(catalog[0]?.dependencies).toEqual([
+      {
+        key: 'github:example/z-spec',
+        type: 'requires',
+        reason: 'A builds on top of Z.',
+        slug: 'z-spec',
+        name: 'Z Spec',
+      },
+    ]);
+    expect(catalog[1]?.specKey).toBe('github:example/z-spec');
+    expect(catalog[1]?.dependencies).toEqual([]);
     expect(catalog[1]?.readmeContent).toBeNull();
     expect(catalog[1]?.readmeAssetBaseUrl).toBeNull();
     expect(catalog[1]?.metadata).toBeNull();

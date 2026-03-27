@@ -244,6 +244,37 @@ button {
   font-size: 0.83rem;
 }
 
+.dependency-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.dependency-list li {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.dependency-link {
+  width: fit-content;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--accent-deep);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.dependency-reason {
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
 .command-grid {
   margin-top: 1.2rem;
   display: grid;
