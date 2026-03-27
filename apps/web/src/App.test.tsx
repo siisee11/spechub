@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App, { defaultCopyText, splitSpecCardTitle } from './App';
 import type { SpecCatalogEntry } from './lib/spec-catalog';
 
@@ -36,6 +36,32 @@ const SAMPLE_SPECS: SpecCatalogEntry[] = [
 ];
 
 describe('App', () => {
+  beforeEach(() => {
+    cleanup();
+    window.history.replaceState(null, '', '/');
+  });
+
+  it('uses the URL hash to select the matching spec on load', () => {
+    window.history.replaceState(null, '', '#docs-blueprint');
+
+    render(<App specs={SAMPLE_SPECS} />);
+
+    const selectedDetails = screen.getByLabelText('Selected spec details');
+    expect(within(selectedDetails).getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select docs-blueprint' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Select harness-spec' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('falls back to the first spec when the URL hash is invalid', () => {
+    window.history.replaceState(null, '', '#bad%ZZ');
+
+    render(<App specs={SAMPLE_SPECS} />);
+
+    const selectedDetails = screen.getByLabelText('Selected spec details');
+    expect(within(selectedDetails).getByRole('heading', { name: 'Harness Spec' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select harness-spec' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('renders positioning copy, lists specs, and supports copy actions', () => {
     const copyMock = vi.fn();
 
@@ -81,6 +107,7 @@ describe('App', () => {
 
     const selectedDetails = screen.getByLabelText('Selected spec details');
     expect(within(selectedDetails).getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#docs-blueprint');
     expect(screen.getByRole('button', { name: 'Select docs-blueprint' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.queryByRole('link', { name: 'https://github.com/siisee11/harness.spec' })).not.toBeInTheDocument();
     expect(screen.queryByText('Portable agent loop.')).not.toBeInTheDocument();
@@ -95,6 +122,31 @@ describe('App', () => {
     expect(copyMock).toHaveBeenCalledWith(
       'curl -fsSL "https://raw.githubusercontent.com/openai/spechub/main/scripts/install-spec.sh" | sh -s -- "openai/spechub" "main" "docs-blueprint"',
     );
+  });
+
+  it('updates the selected spec when the hash changes externally', async () => {
+    render(<App specs={SAMPLE_SPECS} />);
+
+    window.location.hash = '#docs-blueprint';
+
+    await waitFor(() => {
+      const selectedDetails = screen.getByLabelText('Selected spec details');
+      expect(within(selectedDetails).getByRole('heading', { name: 'Docs Blueprint' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Select docs-blueprint' })).toHaveAttribute('aria-pressed', 'true');
+    });
+  });
+
+  it('does not rewrite the hash when the selected spec is clicked again', () => {
+    window.history.replaceState(null, '', '#harness-spec');
+    const replaceStateSpy = vi.spyOn(window.history, 'replaceState');
+
+    render(<App specs={SAMPLE_SPECS} />);
+    replaceStateSpy.mockClear();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select harness-spec' }));
+
+    expect(replaceStateSpy).not.toHaveBeenCalled();
+    replaceStateSpy.mockRestore();
   });
 
   it('renders empty state when there are no specs', () => {

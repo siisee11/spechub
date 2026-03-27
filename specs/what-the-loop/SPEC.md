@@ -273,6 +273,26 @@ Required properties:
 - review cannot begin before delivery is complete
 - terminal completion requires an explicit `complete` directive
 
+### GAN Policy (example)
+
+Suitable for planner / generator / evaluator workflows that require an agreed
+acceptance contract before generation starts.
+
+```
+idle → planning → contracting → generating ⇄ evaluating → completed
+                                         │
+                         (score below threshold, budget remains)
+                                         ▼
+                                     generating
+                              (limit reached → exhausted)
+```
+
+Required properties:
+- generation cannot begin before both a plan and a contract exist
+- evaluation cannot begin before at least one generation attempt exists
+- evaluator failure may loop back to generation under the same contract
+- terminal completion requires an explicit evaluator pass and `complete` directive
+
 ---
 
 ## Observer Contract
@@ -355,7 +375,10 @@ Properties not verified by the current models:
 ## Files
 
 - [wtl_engine.qnt](./wtl_engine.qnt)
-- [wtl_policy.qnt](./wtl_policy.qnt)
+- [wtl_policy_interactive.qnt](./wtl_policy_interactive.qnt)
+- [wtl_policy_ralph_wigum.qnt](./wtl_policy_ralph_wigum.qnt)
+- [wtl_policy_gan.qnt](./wtl_policy_gan.qnt)
+- [wtl_policy_autoresearch.qnt](./wtl_policy_autoresearch.qnt)
 - [wtl_observer.qnt](./wtl_observer.qnt)
 
 ---
@@ -372,14 +395,14 @@ WTL interface as a working CLI tool.
 > **[Must ask the user before starting implementation]**
 >
 > The coding agent implementing this spec must ask the user the following two
-> questions before beginning:
+> questions before beginning, while recommending the default choices below:
 >
 > 1. **"Which programming language would you like to use?"**
->    (e.g. Go, TypeScript, Python, Rust, etc.)
+>    Recommended default: **Go**
 >
 > 2. **"Which agent runtime would you like to use?"**
->    (e.g. Claude API, OpenAI API, local LLM, Codex App Server, etc.)
->    The answer determines the TurnRunner implementation and log output behavior.
+>    Recommended default: **Codex App Server**
+>    The answer determines the `TurnRunner` implementation and log output behavior.
 >
 > Begin implementation only after receiving answers to both questions.
 

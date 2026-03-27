@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SpecCatalogEntry } from './lib/spec-catalog';
 import { renderMarkdown } from './lib/render-markdown';
 import './App.css';
@@ -17,6 +17,28 @@ export function splitSpecCardTitle(title: string): string[] {
   return [words.slice(0, -1).join(' '), words.at(-1)!];
 }
 
+function readSelectedSlugFromHash(): string | null {
+  const hash = window.location.hash.replace(/^#/, '').trim();
+  if (hash === '') {
+    return null;
+  }
+
+  try {
+    return decodeURIComponent(hash);
+  } catch {
+    return hash;
+  }
+}
+
+function writeSelectedSlugToHash(slug: string): void {
+  const encodedSlug = encodeURIComponent(slug);
+  if (window.location.hash === `#${encodedSlug}`) {
+    return;
+  }
+
+  window.history.replaceState(null, '', `#${encodedSlug}`);
+}
+
 type AppProps = {
   specs: SpecCatalogEntry[];
   onCopyText?: (text: string) => void | Promise<void>;
@@ -26,11 +48,22 @@ export default function App({
   specs,
   onCopyText = defaultCopyText,
 }: AppProps) {
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(() => readSelectedSlugFromHash());
   const activeSlug = specs.some((spec) => spec.slug === selectedSlug) ? selectedSlug : specs[0]?.slug ?? null;
   const selectedSpec = specs.find((spec) => spec.slug === activeSlug) ?? null;
   const syncedSpecCount = specs.filter((spec) => spec.metadata?.syncedDate).length;
   const readmeCount = specs.filter((spec) => spec.readmeContent).length;
+
+  useEffect(() => {
+    const syncSelectedSlugFromHash = (): void => {
+      setSelectedSlug(readSelectedSlugFromHash());
+    };
+
+    window.addEventListener('hashchange', syncSelectedSlugFromHash);
+    return () => {
+      window.removeEventListener('hashchange', syncSelectedSlugFromHash);
+    };
+  }, []);
 
   return (
     <main className="page">
@@ -193,6 +226,7 @@ export default function App({
                         type="button"
                         onClick={() => {
                           setSelectedSlug(spec.slug);
+                          writeSelectedSlugToHash(spec.slug);
                         }}
                         aria-label={`Select ${spec.slug}`}
                         aria-pressed={isSelected}
