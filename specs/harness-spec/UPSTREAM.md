@@ -6,7 +6,7 @@ This directory vendors third-party specification content from `siisee11/harness.
 
 - Repository: `https://github.com/siisee11/harness.spec`
 - Source branch/reference fetched: `main`
-- Resolved commit at fetch time (2026-03-27): `e6e959128a01a884a971ca62ccf0b667e61d9794`
+- Resolved commit at fetch time (2026-03-31): `e6e959128a01a884a971ca62ccf0b667e61d9794`
 - License in upstream repo: no top-level `LICENSE` file present at fetched commit.
 
 ## Canonical source URLs
