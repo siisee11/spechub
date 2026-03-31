@@ -220,7 +220,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
       path.join(repoRoot, 'specs', 'with-readme-assets', 'metadata.json'),
       JSON.stringify(
         {
-          source: 'https://github.com/siisee11/what-the-loop.spec',
+          source: 'https://github.com/siisee11/loop-state-machine.spec',
           synced_date: '2026-03-10T12:34:10Z',
         },
         null,
@@ -244,9 +244,9 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
         content: '# With Assets\n\nSpec body.\n',
         readmeContent: '# Readme\n\n![Diagram](./assets/diagram.png)\n',
         readmeAssetBaseUrl:
-          'https://raw.githubusercontent.com/siisee11/what-the-loop.spec/0123456789abcdef0123456789abcdef01234567/',
+          'https://raw.githubusercontent.com/siisee11/loop-state-machine.spec/0123456789abcdef0123456789abcdef01234567/',
         metadata: {
-          source: 'https://github.com/siisee11/what-the-loop.spec',
+          source: 'https://github.com/siisee11/loop-state-machine.spec',
           syncedDate: '2026-03-10T12:34:10Z',
         },
         config: null,
@@ -334,7 +334,7 @@ describe('loadSpecMarkdownFilesFromRepository', () => {
       path.join(repoRoot, 'specs', 'bad-upstream', 'metadata.json'),
       JSON.stringify(
         {
-          source: 'https://github.com/siisee11/what-the-loop.spec',
+          source: 'https://github.com/siisee11/loop-state-machine.spec',
           synced_date: '2026-03-10T12:34:10Z',
         },
         null,

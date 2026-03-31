@@ -315,12 +315,12 @@ test("install-spec reads overwrite confirmation from /dev/tty when the script is
 
 test("install-spec installs transitive dependencies declared in spec.config.json", async () => {
   const archivePath = await createArchiveForSpecs({
-    "what-the-loop": {
-      "SPEC.md": "# What The Loop\n",
+    "loop-state-machine": {
+      "SPEC.md": "# Loop State Machine\n",
       "spec.config.json": buildSpecConfig({
-        key: "github:siisee11/what-the-loop.spec",
-        slug: "what-the-loop",
-        title: "What The Loop",
+        key: "github:siisee11/loop-state-machine.spec",
+        slug: "loop-state-machine",
+        title: "Loop State Machine",
       }),
     },
     "ralph-loop": {
@@ -331,9 +331,9 @@ test("install-spec installs transitive dependencies declared in spec.config.json
         title: "Ralph Loop",
         dependencies: [
           {
-            key: "github:siisee11/what-the-loop.spec",
+            key: "github:siisee11/loop-state-machine.spec",
             type: "requires",
-            reason: "WTL provides the host loop contract.",
+            reason: "LSM provides the host loop contract.",
           },
         ],
       }),
@@ -359,9 +359,9 @@ test("install-spec installs transitive dependencies declared in spec.config.json
 
   expect(exitCode).toBe(0);
   expect(stdout).toContain("installed harness-spec into ");
-  expect(stderr).toContain("installed dependency what-the-loop into ");
+  expect(stderr).toContain("installed dependency loop-state-machine into ");
   expect(stderr).toContain("installed dependency ralph-loop into ");
-  await access(join(targetDir, "specs/what-the-loop/SPEC.md"), constants.F_OK);
+  await access(join(targetDir, "specs/loop-state-machine/SPEC.md"), constants.F_OK);
   await access(join(targetDir, "specs/ralph-loop/SPEC.md"), constants.F_OK);
   await access(join(targetDir, "specs/harness-spec/SPEC.md"), constants.F_OK);
 });

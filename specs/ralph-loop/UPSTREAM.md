@@ -27,7 +27,7 @@ This directory vendors third-party specification content from `siisee11/ralph-lo
 
 ## Modification status
 
-- `SPEC.md`: unmodified copy of the upstream file at commit `f1a710ced9d64cbb7b31b7114c2acc9d7a25f258`.
-- `spec.config.json`: unmodified copy of the upstream file at commit `f1a710ced9d64cbb7b31b7114c2acc9d7a25f258`.
+- `SPEC.md`: locally patched after sync to reflect the upstream rename from What The Loop to Loop State Machine and the `lsm_*` model filenames.
+- `spec.config.json`: locally patched after sync to point dependency resolution at `github:siisee11/loop-state-machine.spec`.
 - `metadata.json` is repository-local discovery metadata.
 - `UPSTREAM.md` is repository-local provenance metadata.
