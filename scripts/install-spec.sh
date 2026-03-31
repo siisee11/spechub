@@ -195,8 +195,17 @@ ensure_requested_target() {
 
   printf "%s" "destination '$spec_target' already exists. Overwrite? [y/N] " >&2
   overwrite_reply=""
-  if ! read -r overwrite_reply; then
-    overwrite_reply=""
+
+  # When this script is piped into `sh -s`, stdin is consumed by the script body.
+  # Prefer the controlling terminal for prompts so the user can still answer.
+  if [ -t 2 ] && [ -r /dev/tty ]; then
+    if ! read -r overwrite_reply < /dev/tty; then
+      overwrite_reply=""
+    fi
+  else
+    if ! read -r overwrite_reply; then
+      overwrite_reply=""
+    fi
   fi
 
   case "$overwrite_reply" in

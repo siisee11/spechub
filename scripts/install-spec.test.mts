@@ -128,6 +128,99 @@ async function runInstall(targetDir: string, archivePath: string, options?: { sl
   };
 }
 
+async function runInstallFromScriptWithTty(
+  targetDir: string,
+  archivePath: string,
+  options?: { slug?: string; input?: string },
+) {
+  const fakeCurlBin = await createFakeCurlBin(archivePath);
+  const slug = options?.slug ?? "demo-spec";
+  const input = options?.input ?? "";
+  const ptyRunner = String.raw`
+import os
+import pty
+import select
+import sys
+
+pid, master = pty.fork()
+if pid == 0:
+    os.chdir(os.environ["TEST_CWD"])
+    os.execvpe(
+        "sh",
+        ["sh", "-c", 'sh -s -- "$TEST_REPO" "$TEST_REF" "$TEST_SLUG" < "$INSTALL_SCRIPT_PATH"'],
+        os.environ.copy(),
+    )
+
+prompt = b"Overwrite? [y/N]"
+reply = os.environ.get("TEST_TTY_INPUT", "").encode()
+sent = False
+chunks = []
+
+while True:
+    ready, _, _ = select.select([master], [], [], 0.1)
+    if master in ready:
+        try:
+            data = os.read(master, 4096)
+        except OSError:
+            data = b""
+        if data:
+            chunks.append(data)
+            if (not sent) and prompt in b"".join(chunks):
+                if reply:
+                    os.write(master, reply)
+                sent = True
+
+    try:
+        finished_pid, status = os.waitpid(pid, os.WNOHANG)
+    except ChildProcessError:
+        finished_pid, status = pid, 0
+
+    if finished_pid == pid:
+        while True:
+            try:
+                data = os.read(master, 4096)
+            except OSError:
+                break
+            if not data:
+                break
+            chunks.append(data)
+        break
+
+os.close(master)
+sys.stdout.buffer.write(b"".join(chunks))
+if os.WIFEXITED(status):
+    sys.exit(os.WEXITSTATUS(status))
+if os.WIFSIGNALED(status):
+    sys.exit(128 + os.WTERMSIG(status))
+sys.exit(1)
+`;
+  const run = Bun.spawn({
+    cmd: ["python3", "-c", ptyRunner],
+    stdin: "ignore",
+    env: {
+      ...process.env,
+      LANG: "C",
+      LC_ALL: "C",
+      PATH: `${fakeCurlBin}:${process.env.PATH ?? ""}`,
+      TEST_ARCHIVE_PATH: archivePath,
+      INSTALL_SCRIPT_PATH: installScriptPath,
+      TEST_CWD: targetDir,
+      TEST_TTY_INPUT: input,
+      TEST_REPO: "openai/spechub",
+      TEST_REF: "main",
+      TEST_SLUG: slug,
+    },
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+
+  return {
+    exitCode: await run.exited,
+    stdout: await new Response(run.stdout).text(),
+    stderr: await new Response(run.stderr).text(),
+  };
+}
+
 test("install-spec copies companion files from the spec folder", async () => {
   const archivePath = await createArchive({
     "SPEC.md": "# Demo Spec\n",
@@ -196,6 +289,28 @@ test("install-spec leaves an existing spec folder unchanged when overwrite is de
   expect(stderr).toContain("destination './specs/demo-spec' already exists. Overwrite? [y/N]");
   expect(stderr).toContain("skipped overwriting existing destination './specs/demo-spec'");
   expect(await readFile(join(existingSpecRoot, "SPEC.md"), "utf8")).toBe("# Old Demo Spec\n");
+});
+
+test("install-spec reads overwrite confirmation from /dev/tty when the script is piped into sh", async () => {
+  const archivePath = await createArchive({
+    "SPEC.md": "# Fresh Demo Spec\n",
+    "notes.md": "fresh companion file\n",
+  });
+  const targetDir = await mkdtemp(join(tmpdir(), "spechub-install-target-"));
+  const existingSpecRoot = join(targetDir, "specs/demo-spec");
+
+  await mkdir(existingSpecRoot, { recursive: true });
+  await writeFile(join(existingSpecRoot, "SPEC.md"), "# Old Demo Spec\n");
+  await writeFile(join(existingSpecRoot, "notes.md"), "stale companion file\n");
+
+  const { exitCode, stdout, stderr } = await runInstallFromScriptWithTty(targetDir, archivePath, { input: "yes\n" });
+  const combinedOutput = `${stdout}\n${stderr}`;
+
+  expect(exitCode).toBe(0);
+  expect(combinedOutput).toContain("destination './specs/demo-spec' already exists. Overwrite? [y/N]");
+  expect(combinedOutput).toContain("installed demo-spec into ");
+  expect(await readFile(join(existingSpecRoot, "SPEC.md"), "utf8")).toBe("# Fresh Demo Spec\n");
+  expect(await readFile(join(existingSpecRoot, "notes.md"), "utf8")).toBe("fresh companion file\n");
 });
 
 test("install-spec installs transitive dependencies declared in spec.config.json", async () => {
